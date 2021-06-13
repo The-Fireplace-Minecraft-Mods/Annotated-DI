@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "annotateddi",
+  "version": "${version}",
+
+  "name": "Annotated DI",
+  "description": "Dependency Injection library for Fabric mods.",
+  "authors": [
+    "The_Fireplace"
+  ],
+  "contact": {
+    "homepage": "https://www.curseforge.com/minecraft/mc-mods/annotated-di",
+    "sources": "https://github.com/The-Fireplace-Minecraft-Mods/Annotated-DI",
+    "issues": "https://github.com/The-Fireplace-Minecraft-Mods/Annotated-DI/issues"
+  },
+
+  "license": "Apache-2.0",
+  "icon": "assets/annotateddi/logo.png",
+
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "dev.the_fireplace.annotateddi.AnnotatedDI"
+    ]
+  },
+
+  "depends": {
+    "fabricloader": "*"
+  },
+
+  "custom": {
+    "modmenu": {
+      "links": {
+        "modmenu.discord": "https://discord.gg/QXQYPj5"
+      },
+      "badges": [ "library" ]
+    }
+  }
+}
