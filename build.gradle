@@ -56,8 +56,8 @@ java {
 }
 
 shadowJar {
-	relocate("org.reflections", "${group}.shadowed.org.reflections")
-	relocate("com.google.inject", "${group}.shadowed.com.google.inject")
+	relocate("org.reflections", "${project.group}.shadowed.org.reflections")
+	relocate("com.google.inject", "${project.group}.shadowed.com.google.inject")
 
 	configurations = [project.configurations.shadow]
 	classifier "shadow"
