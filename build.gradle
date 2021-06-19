@@ -2,7 +2,6 @@
 plugins {
 	// Dependencies
 	id 'fabric-loom' version '0.8-SNAPSHOT'
-	id 'com.github.johnrengelman.shadow' version '7.0.0'
 	// Mod Hosting Publish
 	id 'com.matthewprenger.cursegradle' version '1.4.0'
 	id 'com.modrinth.minotaur' version '1.1.0'
@@ -29,10 +28,10 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	implementation "com.google.inject:guice:${project.guice_version}"
-	shadow "com.google.inject:guice:${project.guice_version}"
+	include "com.google.inject:guice:${project.guice_version}"
 
 	implementation "org.reflections:reflections:${project.reflections_version}"
-	shadow "org.reflections:reflections:${project.reflections_version}"
+	include "org.reflections:reflections:${project.reflections_version}"
 
 	compileOnly "com.google.code.findbugs:jsr305:3.0.2"
 }
@@ -53,19 +52,6 @@ tasks.withType(JavaCompile).configureEach {
 java {
 	withSourcesJar()
 	withJavadocJar()
-}
-
-shadowJar {
-	relocate("org.reflections", "dev.the_fireplace.shadowed.org.reflections")
-	relocate("com.google.inject", "dev.the_fireplace.shadowed.com.google.inject")
-
-	configurations = [project.configurations.shadow]
-	classifier "shadow"
-}
-
-remapJar {
-	dependsOn(shadowJar)
-	input.set(shadowJar.archivePath)
 }
 
 jar {
