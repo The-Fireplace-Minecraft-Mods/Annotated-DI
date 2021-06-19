@@ -27,10 +27,10 @@ dependencies {
 	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-	implementation "com.google.inject:guice:${project.guice_version}"
+	modImplementation "com.google.inject:guice:${project.guice_version}"
 	include "com.google.inject:guice:${project.guice_version}"
 
-	implementation "org.reflections:reflections:${project.reflections_version}"
+	modImplementation "org.reflections:reflections:${project.reflections_version}"
 	include "org.reflections:reflections:${project.reflections_version}"
 
 	compileOnly "com.google.code.findbugs:jsr305:3.0.2"
