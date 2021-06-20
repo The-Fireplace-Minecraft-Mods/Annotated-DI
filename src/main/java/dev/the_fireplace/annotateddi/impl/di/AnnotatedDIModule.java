@@ -1,7 +1,8 @@
-package dev.the_fireplace.annotateddi.di;
+package dev.the_fireplace.annotateddi.impl.di;
 
 import com.google.inject.AbstractModule;
-import dev.the_fireplace.annotateddi.AnnotatedDI;
+import dev.the_fireplace.annotateddi.api.di.Implementation;
+import dev.the_fireplace.annotateddi.impl.AnnotatedDI;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.reflections.Reflections;

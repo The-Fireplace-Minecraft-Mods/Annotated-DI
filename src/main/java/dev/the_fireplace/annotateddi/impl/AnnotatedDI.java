@@ -1,10 +1,12 @@
-package dev.the_fireplace.annotateddi;
+package dev.the_fireplace.annotateddi.impl;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import dev.the_fireplace.annotateddi.di.AnnotatedDIModule;
-import dev.the_fireplace.annotateddi.entrypoint.DIModuleEntrypoint;
+import dev.the_fireplace.annotateddi.api.DIContainer;
+import dev.the_fireplace.annotateddi.api.entrypoints.DIModInitializer;
+import dev.the_fireplace.annotateddi.api.entrypoints.DIModuleCreator;
+import dev.the_fireplace.annotateddi.impl.di.AnnotatedDIModule;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
 import org.apache.commons.lang3.ArrayUtils;
@@ -18,7 +20,7 @@ public final class AnnotatedDI implements ModInitializer {
             var moduleContainer = new Object() {
                 AbstractModule[] modules = new AbstractModule[]{new AnnotatedDIModule()};
             };
-            FabricLoader.getInstance().getEntrypointContainers("di", DIModuleEntrypoint.class).forEach((entrypoint) -> {
+            FabricLoader.getInstance().getEntrypointContainers("di-module", DIModuleCreator.class).forEach((entrypoint) -> {
                 moduleContainer.modules = ArrayUtils.addAll(moduleContainer.modules, entrypoint.getEntrypoint().getModules().toArray(new AbstractModule[0]));
             });
             injector = Guice.createInjector(moduleContainer.modules);
@@ -29,6 +31,8 @@ public final class AnnotatedDI implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        getInjector();
+        Injector container = DIContainer.get();
+        FabricLoader.getInstance().getEntrypointContainers("di-main", DIModInitializer.class)
+            .forEach((entrypoint) -> entrypoint.getEntrypoint().onInitialize(container));
     }
 }

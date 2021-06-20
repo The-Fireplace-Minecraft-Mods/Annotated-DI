@@ -1,4 +1,4 @@
-package dev.the_fireplace.annotateddi.di;
+package dev.the_fireplace.annotateddi.api.di;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

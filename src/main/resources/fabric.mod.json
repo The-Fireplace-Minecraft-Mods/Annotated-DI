@@ -20,7 +20,13 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "dev.the_fireplace.annotateddi.AnnotatedDI"
+      "dev.the_fireplace.annotateddi.impl.AnnotatedDI"
+    ],
+    "client": [
+      "dev.the_fireplace.annotateddi.impl.AnnotatedDIClient"
+    ],
+    "server": [
+      "dev.the_fireplace.annotateddi.impl.AnnotatedDIServer"
     ]
   },
 
