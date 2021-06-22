@@ -6,4 +6,5 @@ import java.lang.annotation.RetentionPolicy;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Implementation {
     Class<?>[] value() default {Object.class};
+    String name() default "";
 }
