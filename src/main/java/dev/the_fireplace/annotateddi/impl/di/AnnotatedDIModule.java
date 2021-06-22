@@ -27,9 +27,9 @@ public final class AnnotatedDIModule extends AbstractModule {
                 if (interfaces.length == 1) {
                     bindWithOptionalName(interfaces[0], implementation, name);
                 } else if (interfaces.length > 1) {
-                    throw new IllegalStateException(String.format("Multiple interfaces found for @Implementation annotated class %s, please set the value(s) to pick the correct one(s).", implementation.getCanonicalName()));
+                    throw new ImplementationException(String.format("Multiple interfaces found for @Implementation annotated class %s, please set the value(s) to pick the correct one(s).", implementation.getCanonicalName()));
                 } else {
-                    throw new IllegalStateException(String.format("No interfaces found for @Implementation annotated class %s, please set the value(s) to pick the correct one(s).", implementation.getCanonicalName()));
+                    throw new ImplementationException(String.format("No interfaces found for @Implementation annotated class %s, please set the value(s) to pick the correct one(s).", implementation.getCanonicalName()));
                 }
             }
         }
