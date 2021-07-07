@@ -17,6 +17,7 @@ annotateddi_version=<mod version>+<minecraft version>
 
 ## Usage
 A simple example of how the custom `@Implementation` annotation is used:
+
 NetworkInterface.java
 ```
 public interface NetworkInterface {
@@ -48,8 +49,18 @@ public class SomeOtherFile {
     }
 }
 ```
+DiEntrypoint.java
+```
+public class DiEntrypoint implements DIModInitializer {
+    public void onInitialize(Injector diContainer) {
+        SomeOtherFile otherFile = diContainer.getInstance(SomeOtherFile.class);
+        otherFile.doStuff();
+    }
+}
+```
 
 `@Implementation` annotation with multiple interfaces:
+
 NetworkInterface.java
 ```
 public interface NetworkInterface {
