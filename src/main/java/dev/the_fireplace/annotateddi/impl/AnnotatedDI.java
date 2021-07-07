@@ -3,6 +3,7 @@ package dev.the_fireplace.annotateddi.impl;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Stage;
 import dev.the_fireplace.annotateddi.api.DIContainer;
 import dev.the_fireplace.annotateddi.api.entrypoints.DIModInitializer;
 import dev.the_fireplace.annotateddi.api.entrypoints.DIModuleCreator;
@@ -23,7 +24,7 @@ public final class AnnotatedDI implements ModInitializer {
             FabricLoader.getInstance().getEntrypointContainers("di-module", DIModuleCreator.class).forEach((entrypoint) -> {
                 moduleContainer.modules = ArrayUtils.addAll(moduleContainer.modules, entrypoint.getEntrypoint().getModules().toArray(new AbstractModule[0]));
             });
-            injector = Guice.createInjector(moduleContainer.modules);
+            injector = Guice.createInjector(FabricLoader.getInstance().isDevelopmentEnvironment() ? Stage.DEVELOPMENT : Stage.PRODUCTION, moduleContainer.modules);
         }
 
         return injector;
