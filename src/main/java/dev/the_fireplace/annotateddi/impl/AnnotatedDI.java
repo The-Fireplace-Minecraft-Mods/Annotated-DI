@@ -18,9 +18,7 @@ public final class AnnotatedDI implements ModInitializer {
     private static Injector injector = null;
     public static Injector getInjector() {
         if (injector == null) {
-            var moduleContainer = new Object() {
-                AbstractModule[] modules = new AbstractModule[]{new AnnotatedDIModule()};
-            };
+            ModuleContainer moduleContainer = new ModuleContainer();
             FabricLoader.getInstance().getEntrypointContainers("di-module", DIModuleCreator.class).forEach((entrypoint) -> {
                 moduleContainer.modules = ArrayUtils.addAll(moduleContainer.modules, entrypoint.getEntrypoint().getModules().toArray(new AbstractModule[0]));
             });
@@ -35,5 +33,9 @@ public final class AnnotatedDI implements ModInitializer {
         Injector container = DIContainer.get();
         FabricLoader.getInstance().getEntrypointContainers("di-main", DIModInitializer.class)
             .forEach((entrypoint) -> entrypoint.getEntrypoint().onInitialize(container));
+    }
+
+    private static class ModuleContainer {
+        private AbstractModule[] modules = new AbstractModule[]{new AnnotatedDIModule()};
     }
 }
