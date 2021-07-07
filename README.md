@@ -1,5 +1,5 @@
 # Annotated DI
-[![CurseForge](http://cf.way2muchnoise.eu/short_000000_downloads.svg)](https://minecraft.curseforge.com/projects/annotated-di)
+[![CurseForge](http://cf.way2muchnoise.eu/short_501373_downloads.svg)](https://minecraft.curseforge.com/projects/annotated-di)
 
 Annotated DI adds Dependency Injection for Minecraft mods. It includes [Guice](https://github.com/google/guice) for the basic DI system, and adds a custom annotation to allow easily setting up a DI system configured only by annotations.
 
