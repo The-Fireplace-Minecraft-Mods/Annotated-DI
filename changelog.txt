@@ -1,1 +1,1 @@
-Initial Release
+Improved loading performance
