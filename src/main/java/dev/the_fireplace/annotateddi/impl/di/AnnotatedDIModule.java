@@ -5,10 +5,8 @@ import com.google.inject.name.Names;
 import dev.the_fireplace.annotateddi.api.di.Implementation;
 import dev.the_fireplace.annotateddi.impl.reflections.MagicAtUrlType;
 import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.launch.knot.Knot;
 import org.reflections.Reflections;
 import org.reflections.util.ConfigurationBuilder;
-import org.reflections.util.FilterBuilder;
 import org.reflections.vfs.Vfs;
 
 import javax.annotation.Nullable;
@@ -84,27 +82,12 @@ public final class AnnotatedDIModule extends AbstractModule {
 
     private ConfigurationBuilder getReflectionConfig() {
         return ConfigurationBuilder.build(
-            Knot.getLauncher().getTargetClassLoader(),
-            Executors.newFixedThreadPool(128),
-            new FilterBuilder()
-                .excludePackage("net.fabricmc")
-                .excludePackage("net.minecraft")
-                .excludePackage("com.mojang")
-                .excludePackage("com.google")
-                .excludePackage("io.netty")
-                .excludePackage("org.apache")
-                .excludePackage("org.lwjgl")
-                .excludePackage("org.ow2")
-                .excludePackage("net.java")
-                .excludePackage("java")
-                .excludePackage("com.ibm")
-                .excludePackage("it.unimi")
-                .excludePackage("org.javassist")
-                .excludePackage("org.reflections")
+            Executors.newFixedThreadPool(128)
         );
     }
 
     private static final class ImplementationCache implements Serializable {
+        @Serial
         private static final long serialVersionUID = 0x110;
         private transient static final String CACHE_FILE = FabricLoader.getInstance().getGameDir().resolve("di_implementations.ser").toString();
         private String modList;
