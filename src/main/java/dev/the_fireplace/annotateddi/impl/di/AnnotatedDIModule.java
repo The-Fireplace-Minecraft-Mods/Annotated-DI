@@ -73,7 +73,7 @@ public final class AnnotatedDIModule extends AbstractModule {
     }
 
     private void bindWithOptionalName(Class injectableInterface, Class implementation, String name) {
-        if (name.trim().isEmpty()) {
+        if (name.isBlank()) {
             bind(injectableInterface).to(implementation);
         } else {
             bind(injectableInterface).annotatedWith(Names.named(name)).to(implementation);
