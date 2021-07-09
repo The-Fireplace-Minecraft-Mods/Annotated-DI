@@ -2,18 +2,12 @@ package dev.the_fireplace.annotateddi.impl.di;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
-import dev.the_fireplace.annotateddi.api.di.Implementation;
-import dev.the_fireplace.annotateddi.impl.reflections.MagicAtUrlType;
 import net.fabricmc.loader.api.FabricLoader;
-import org.reflections.Reflections;
-import org.reflections.util.ConfigurationBuilder;
-import org.reflections.vfs.Vfs;
 
 import javax.annotation.Nullable;
 import java.io.*;
 import java.util.Arrays;
 import java.util.Set;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
@@ -29,7 +23,8 @@ public final class AnnotatedDIModule extends AbstractModule {
             bindImplementations(Arrays.asList(implementationCache.implementations));
             return;
         }
-        implementations = getImplementationsUsingReflections();
+        //TODO depending on performance, we may be able to eliminate the cache
+        implementations = findImplementations();
         bindImplementations(implementations);
         implementationCache = new ImplementationCache();
         implementationCache.modList = modList;
@@ -39,23 +34,17 @@ public final class AnnotatedDIModule extends AbstractModule {
 
     private void bindImplementations(Iterable<Class<?>> implementations) {
         for (Class implementation : implementations) {
-            bindImplementationToInterface(implementation);
+            //TODO bindImplementationToInterface(implementation);
         }
     }
 
-    private Set<Class<?>> getImplementationsUsingReflections() {
-        Vfs.UrlType magicATUrl = new MagicAtUrlType();
-        Vfs.addDefaultURLTypes(magicATUrl);
-        ConfigurationBuilder reflectionConfig = getReflectionConfig();
-        Reflections reflections = new Reflections(reflectionConfig);
+    private Set<Class<?>> findImplementations() {
+        //TODO
 
-        return reflections.getTypesAnnotatedWith(Implementation.class);
+        return Set.of();
     }
 
-    private void bindImplementationToInterface(Class implementation) {
-        Implementation annotation = (Implementation) implementation.getAnnotation(Implementation.class);
-        Class<?>[] injectableInterfaces = annotation.value();
-        String name = annotation.name();
+    private void bindImplementationToInterface(Class implementation, Class[] injectableInterfaces, String name) {
         if (!Arrays.equals(injectableInterfaces, new Class[]{Object.class})) {
             for (Class injectableInterface : injectableInterfaces) {
                 bindWithOptionalName(injectableInterface, implementation, name);
@@ -80,17 +69,12 @@ public final class AnnotatedDIModule extends AbstractModule {
         }
     }
 
-    private ConfigurationBuilder getReflectionConfig() {
-        return ConfigurationBuilder.build(
-            Executors.newFixedThreadPool(128)
-        );
-    }
-
     private static final class ImplementationCache implements Serializable {
         @Serial
         private static final long serialVersionUID = 0x110;
         private transient static final String CACHE_FILE = FabricLoader.getInstance().getGameDir().resolve("di_implementations.ser").toString();
         private String modList;
+        //TODO this will have to be revised if kept
         private Class<?>[] implementations;
 
         private ImplementationCache() {}
