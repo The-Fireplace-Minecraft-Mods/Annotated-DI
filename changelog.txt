@@ -1,1 +1,1 @@
-Improved performance - reworked to process annotations on compile instead of scanning at runtime.
+Add handling for @Environment

@@ -4,6 +4,8 @@ import com.google.gson.*;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import dev.the_fireplace.annotateddi.impl.AnnotatedDI;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.launch.common.FabricLauncherBase;
 import net.fabricmc.loader.util.FileSystemUtil;
 import net.fabricmc.loader.util.UrlConversionException;
@@ -130,6 +132,10 @@ public final class AnnotatedDIModule extends AbstractModule {
         List<ImplementationData> implementationDatas = new ArrayList<>();
         for (JsonElement element : modImplementations) {
             JsonObject implementationObj = (JsonObject) element;
+            if (isOnWrongEnvironment(implementationObj)) {
+                continue;
+            }
+
             JsonArray interfaceNames = implementationObj.getAsJsonArray("interfaces");
             List<Class> interfaces = new ArrayList<>();
             for (JsonElement interfaceName : interfaceNames) {
@@ -145,6 +151,11 @@ public final class AnnotatedDIModule extends AbstractModule {
         }
 
         return new ImplementationContainer(jsonObject.get("version").getAsString(), implementationDatas);
+    }
+
+    private boolean isOnWrongEnvironment(JsonObject implementationObj) {
+        return implementationObj.has("environment")
+            && !FabricLoader.getInstance().getEnvironmentType().equals(EnvType.valueOf(implementationObj.get("environment").getAsString()));
     }
 
     private void bindImplementationToInterface(Class implementation, Class[] injectableInterfaces, String name) {
