@@ -1,47 +1,98 @@
 package dev.the_fireplace.annotateddi.impl.di;
 
+import com.google.gson.*;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
-import net.fabricmc.loader.api.FabricLoader;
+import dev.the_fireplace.annotateddi.impl.AnnotatedDI;
+import net.fabricmc.loader.launch.common.FabricLauncherBase;
+import net.fabricmc.loader.util.UrlConversionException;
+import net.fabricmc.loader.util.UrlUtil;
 
-import javax.annotation.Nullable;
-import java.io.*;
-import java.util.Arrays;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.net.URL;
+import java.util.*;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public final class AnnotatedDIModule extends AbstractModule {
     @Override
     protected void configure() {
-        ImplementationCache implementationCache = ImplementationCache.load();
-        Set<Class<?>> implementations;
-        String modList = FabricLoader.getInstance().getAllMods().stream().map(
-            modContainer -> modContainer.getMetadata().getId() + "@" + modContainer.getMetadata().getVersion()
-        ).sorted().collect(Collectors.joining(";"));
-        if (implementationCache != null && modList.equals(implementationCache.modList)) {
-            bindImplementations(Arrays.asList(implementationCache.implementations));
-            return;
-        }
-        //TODO depending on performance, we may be able to eliminate the cache
-        implementations = findImplementations();
+        Set<ImplementationContainer> implementations = findImplementations();
         bindImplementations(implementations);
-        implementationCache = new ImplementationCache();
-        implementationCache.modList = modList;
-        implementationCache.implementations = implementations.toArray(new Class[0]);
-        implementationCache.save();
     }
 
-    private void bindImplementations(Iterable<Class<?>> implementations) {
-        for (Class implementation : implementations) {
-            //TODO bindImplementationToInterface(implementation);
+    private void bindImplementations(Iterable<ImplementationContainer> modImplementations) {
+        for (ImplementationContainer modImplementationData : modImplementations) {
+            for (ImplementationData implementationData : modImplementationData.implementations) {
+                bindImplementationToInterface(
+                    implementationData.implementation,
+                    implementationData.interfaces.toArray(new Class[0]),
+                    implementationData.name
+                );
+            }
         }
     }
 
-    private Set<Class<?>> findImplementations() {
-        //TODO
+    private Set<ImplementationContainer> findImplementations() {
+        Set<ImplementationContainer> implementationContainers = new HashSet<>();
+        try {
+            Enumeration<URL> mods = FabricLauncherBase.getLauncher().getTargetClassLoader().getResources("annotated-di.json");
+            Set<URL> modsList = new HashSet<>();
 
-        return Set.of();
+            while (mods.hasMoreElements()) {
+                try {
+                    modsList.add(UrlUtil.getSource("annotated-di.json", mods.nextElement()));
+                } catch (UrlConversionException e) {
+                    AnnotatedDI.getLogger().debug(e);
+                }
+            }
+
+
+            for (URL url : modsList) {
+                File implementationDataFile;
+
+                try {
+                    implementationDataFile = UrlUtil.asFile(url);
+                } catch (UrlConversionException e) {
+                    continue;
+                }
+
+                JsonParser jsonParser = new JsonParser();
+                try (BufferedReader br = new BufferedReader(new FileReader(implementationDataFile))) {
+                    JsonElement jsonElement = jsonParser.parse(br);
+                    if (jsonElement instanceof JsonObject jsonObject) {
+                        JsonArray modImplementations = jsonObject.getAsJsonArray("implementations");
+                        List<ImplementationData> implementationDatas = new ArrayList<>();
+                        for (JsonElement element : modImplementations) {
+                            JsonObject implementationObj = (JsonObject) element;
+                            JsonArray interfaceNames = implementationObj.getAsJsonArray("interfaces");
+                            List<Class> interfaces = new ArrayList<>();
+                            for (JsonElement interfaceName : interfaceNames) {
+                                interfaces.add(stringToClass(interfaceName.getAsString()));
+                            }
+                            implementationDatas.add(new ImplementationData(
+                                stringToClass(implementationObj.get("class").getAsString()),
+                                interfaces,
+                                implementationObj.has("namedImplementation")
+                                    ? implementationObj.get("namedImplementation").getAsString()
+                                    : ""
+                            ));
+                        }
+
+                        implementationContainers.add(new ImplementationContainer(jsonObject.get("version").getAsString(), implementationDatas));
+                    }
+                } catch (IOException | JsonParseException | ClassNotFoundException e) {
+                    AnnotatedDI.getLogger().error("Exception when reading implementation file!", e);
+                }
+            }
+
+        } catch (IOException e) {
+            AnnotatedDI.getLogger().error("Exception when looking for implementations!", e);
+        }
+
+        return implementationContainers;
     }
 
     private void bindImplementationToInterface(Class implementation, Class[] injectableInterfaces, String name) {
@@ -69,31 +120,10 @@ public final class AnnotatedDIModule extends AbstractModule {
         }
     }
 
-    private static final class ImplementationCache implements Serializable {
-        @Serial
-        private static final long serialVersionUID = 0x110;
-        private transient static final String CACHE_FILE = FabricLoader.getInstance().getGameDir().resolve("di_implementations.ser").toString();
-        private String modList;
-        //TODO this will have to be revised if kept
-        private Class<?>[] implementations;
-
-        private ImplementationCache() {}
-
-        @Nullable
-        private static ImplementationCache load() {
-            try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(CACHE_FILE))) {
-                return (ImplementationCache) in.readObject();
-            } catch (Exception e) {
-                return null;
-            }
-        }
-
-        private void save() {
-            try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(CACHE_FILE))) {
-                out.writeObject(this);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+    private Class stringToClass(String className) throws ClassNotFoundException {
+        return Class.forName(className);
     }
+
+    private record ImplementationContainer(String version, List<ImplementationData> implementations) {}
+    private record ImplementationData(Class implementation, List<Class> interfaces, String name) {}
 }
