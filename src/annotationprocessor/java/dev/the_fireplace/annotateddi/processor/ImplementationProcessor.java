@@ -77,8 +77,6 @@ public final class ImplementationProcessor extends AbstractProcessor {
             FileObject builderFile = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", "annotated-di.json");
             try (JsonWriter writer = gson.newJsonWriter(new BufferedWriter(builderFile.openWriter()))) {
                 gson.toJson(outputJson, writer);
-            } catch (IOException e) {
-                e.printStackTrace();
             }
         } catch (IOException e) {
             e.printStackTrace();
