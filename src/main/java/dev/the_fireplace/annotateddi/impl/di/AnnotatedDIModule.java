@@ -52,7 +52,7 @@ public final class AnnotatedDIModule extends AbstractModule {
             AnnotatedDI.getLogger().error("Exception when scanning for implementations!", e);
         }
 
-        return Set.of();
+        return Collections.emptySet();
     }
 
     private Set<Path> getConfigFilePaths(Enumeration<URL> mods) {
@@ -115,8 +115,8 @@ public final class AnnotatedDIModule extends AbstractModule {
         JsonParser jsonParser = new JsonParser();
         try (BufferedReader br = new BufferedReader(new InputStreamReader(Files.newInputStream(path), StandardCharsets.UTF_8))) {
             JsonElement jsonElement = jsonParser.parse(br);
-            if (jsonElement instanceof JsonObject jsonObject) {
-                implementationContainer = readImplementationContainerJson(jsonObject);
+            if (jsonElement instanceof JsonObject) {
+                implementationContainer = readImplementationContainerJson((JsonObject) jsonElement);
             }
         } catch (IOException | JsonParseException | ClassNotFoundException e) {
             AnnotatedDI.getLogger().error("Exception when reading implementation file!", e);
@@ -176,6 +176,24 @@ public final class AnnotatedDIModule extends AbstractModule {
         return Class.forName(className);
     }
 
-    private record ImplementationContainer(String version, List<ImplementationData> implementations) {}
-    private record ImplementationData(Class implementation, List<Class> interfaces, String name) {}
+    private static class ImplementationContainer {
+        private final String version;
+        private final List<ImplementationData> implementations;
+
+        private ImplementationContainer(String version, List<ImplementationData> implementations) {
+            this.version = version;
+            this.implementations = implementations;
+        }
+    }
+    private static class ImplementationData {
+        private final Class implementation;
+        private final List<Class> interfaces;
+        private final String name;
+
+        private ImplementationData(Class implementation, List<Class> interfaces, String name) {
+            this.implementation = implementation;
+            this.interfaces = interfaces;
+            this.name = name;
+        }
+    }
 }

@@ -22,7 +22,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @SupportedAnnotationTypes("dev.the_fireplace.annotateddi.api.di.Implementation")
-@SupportedSourceVersion(SourceVersion.RELEASE_16)
+@SupportedSourceVersion(SourceVersion.RELEASE_8)
 @AutoService(Processor.class)
 public final class ImplementationProcessor extends AbstractProcessor {
     private static final String VERSION = "${version}";
@@ -122,7 +122,7 @@ public final class ImplementationProcessor extends AbstractProcessor {
         JsonObject output = new JsonObject();
 
         output.addProperty("class", implementationElement.asType().toString());
-        if (!namedImplementationName.isBlank()) {
+        if (!namedImplementationName.trim().isEmpty()) {
             output.addProperty("namedImplementation", namedImplementationName);
         }
         JsonArray interfacesJsonArray = new JsonArray();
@@ -139,7 +139,7 @@ public final class ImplementationProcessor extends AbstractProcessor {
     }
 
     private List<String> getExplicitInterfaces(Implementation implAnnotation) {
-        return Arrays.stream(implAnnotation.value()).toList();
+        return Arrays.stream(implAnnotation.value()).collect(Collectors.toList());
     }
 
     private boolean usesImplicitInterface(Implementation implAnnotation) {
