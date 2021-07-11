@@ -5,16 +5,20 @@ import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import dev.the_fireplace.annotateddi.impl.AnnotatedDI;
 import net.fabricmc.loader.launch.common.FabricLauncherBase;
+import net.fabricmc.loader.util.FileSystemUtil;
 import net.fabricmc.loader.util.UrlConversionException;
 import net.fabricmc.loader.util.UrlUtil;
 
 import javax.annotation.Nullable;
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
+import java.util.zip.ZipError;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public final class AnnotatedDIModule extends AbstractModule {
@@ -41,9 +45,9 @@ public final class AnnotatedDIModule extends AbstractModule {
     private Set<ImplementationContainer> findImplementations() {
         try {
             Enumeration<URL> diConfigFileUrls = FabricLauncherBase.getLauncher().getTargetClassLoader().getResources(DI_CONFIG_FILE_NAME);
-            Set<URL> validConfigFileUrls = validateConfigFileUrls(diConfigFileUrls);
+            Set<Path> validConfigFilePaths = getConfigFilePaths(diConfigFileUrls);
 
-            return getImplementationContainersFromConfigs(validConfigFileUrls);
+            return getImplementationContainersFromConfigs(validConfigFilePaths);
         } catch (IOException e) {
             AnnotatedDI.getLogger().error("Exception when scanning for implementations!", e);
         }
@@ -51,11 +55,50 @@ public final class AnnotatedDIModule extends AbstractModule {
         return Set.of();
     }
 
-    private Set<ImplementationContainer> getImplementationContainersFromConfigs(Set<URL> configFileUrls) {
+    private Set<Path> getConfigFilePaths(Enumeration<URL> mods) {
+        Set<Path> modsList = new HashSet<>();
+
+        while (mods.hasMoreElements()) {
+            URL url;
+            try {
+                url = UrlUtil.getSource(DI_CONFIG_FILE_NAME, mods.nextElement());
+            } catch (UrlConversionException e) {
+                AnnotatedDI.getLogger().error("Error getting DI config's source!", e);
+                continue;
+            }
+            Path normalizedPath, configJsonPath;
+            try {
+                normalizedPath = UrlUtil.asPath(url).normalize();
+            } catch (UrlConversionException e) {
+                throw new RuntimeException("Failed to convert URL " + url + "!", e);
+            }
+
+            if (Files.isDirectory(normalizedPath)) {
+                configJsonPath = normalizedPath.resolve(DI_CONFIG_FILE_NAME);
+            } else {
+                // JAR file
+                try {
+                    FileSystemUtil.FileSystemDelegate jarFs = FileSystemUtil.getJarFileSystem(normalizedPath, false);
+                    configJsonPath = jarFs.get().getPath(DI_CONFIG_FILE_NAME);
+                } catch (IOException e) {
+                    AnnotatedDI.getLogger().error("Failed to open JAR at " + normalizedPath + "!", e);
+                    continue;
+                } catch (ZipError e) {
+                    AnnotatedDI.getLogger().error("Jar at " + normalizedPath + " is corrupted!", e);
+                    continue;
+                }
+            }
+            modsList.add(configJsonPath);
+        }
+
+        return modsList;
+    }
+
+    private Set<ImplementationContainer> getImplementationContainersFromConfigs(Set<Path> configFilePaths) {
         Set<ImplementationContainer> implementationContainers = new HashSet<>();
 
-        for (URL url : configFileUrls) {
-            ImplementationContainer implementationContainer = readImplementationContainerFromUrl(url);
+        for (Path path : configFilePaths) {
+            ImplementationContainer implementationContainer = readImplementationContainerFromPath(path);
 
             if (implementationContainer != null) {
                 implementationContainers.add(implementationContainer);
@@ -65,33 +108,12 @@ public final class AnnotatedDIModule extends AbstractModule {
         return implementationContainers;
     }
 
-    private Set<URL> validateConfigFileUrls(Enumeration<URL> mods) {
-        Set<URL> modsList = new HashSet<>();
-
-        while (mods.hasMoreElements()) {
-            try {
-                modsList.add(UrlUtil.getSource(DI_CONFIG_FILE_NAME, mods.nextElement()));
-            } catch (UrlConversionException e) {
-                AnnotatedDI.getLogger().debug("Unable to read DI config!", e);
-            }
-        }
-
-        return modsList;
-    }
-
     @Nullable
-    private ImplementationContainer readImplementationContainerFromUrl(URL url) {
+    private ImplementationContainer readImplementationContainerFromPath(Path path) {
         ImplementationContainer implementationContainer = null;
-        File implementationDataFile;
-
-        try {
-            implementationDataFile = UrlUtil.asFile(url);
-        } catch (UrlConversionException e) {
-            return null;
-        }
 
         JsonParser jsonParser = new JsonParser();
-        try (BufferedReader br = new BufferedReader(new FileReader(implementationDataFile))) {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(Files.newInputStream(path), StandardCharsets.UTF_8))) {
             JsonElement jsonElement = jsonParser.parse(br);
             if (jsonElement instanceof JsonObject jsonObject) {
                 implementationContainer = readImplementationContainerJson(jsonObject);
