@@ -6,6 +6,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonWriter;
 import dev.the_fireplace.annotateddi.api.di.Implementation;
+import dev.the_fireplace.annotateddi.impl.di.AnnotatedDIModule;
 
 import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
@@ -74,7 +75,7 @@ public final class ImplementationProcessor extends AbstractProcessor {
 
     private void writeJsonToFile(JsonObject outputJson) {
         try {
-            FileObject builderFile = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", "annotated-di.json");
+            FileObject builderFile = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", AnnotatedDIModule.DI_CONFIG_FILE_NAME);
             try (JsonWriter writer = gson.newJsonWriter(new BufferedWriter(builderFile.openWriter()))) {
                 gson.toJson(outputJson, writer);
             }
