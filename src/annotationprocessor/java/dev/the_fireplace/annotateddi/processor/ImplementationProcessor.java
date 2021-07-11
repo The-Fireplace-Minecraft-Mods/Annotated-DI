@@ -7,6 +7,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonWriter;
 import dev.the_fireplace.annotateddi.api.di.Implementation;
 import dev.the_fireplace.annotateddi.impl.di.AnnotatedDIModule;
+import net.fabricmc.api.Environment;
 
 import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
@@ -130,6 +131,12 @@ public final class ImplementationProcessor extends AbstractProcessor {
             interfacesJsonArray.add(interfaceName);
         }
         output.add("interfaces", interfacesJsonArray);
+
+        Environment environment = implementationElement.getAnnotation(Environment.class);
+
+        if (environment != null) {
+            output.addProperty("environment", environment.value().toString());
+        }
 
         return output;
     }
