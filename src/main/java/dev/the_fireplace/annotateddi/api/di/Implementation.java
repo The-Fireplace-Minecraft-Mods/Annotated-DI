@@ -5,6 +5,6 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.TYPE)
 public @interface Implementation {
-    Class<?>[] value() default Object.class;
+    String[] value() default "";
     String name() default "";
 }
