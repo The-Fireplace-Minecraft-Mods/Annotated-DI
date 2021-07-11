@@ -41,7 +41,9 @@ dependencies {
 	include 'javax.inject:javax.inject:1'
 	include 'aopalliance:aopalliance:1.0'
 
-	annotationprocessorImplementation "com.google.code.gson:gson:2.8.0"
+	annotationprocessorImplementation "com.google.code.gson:gson:2.8.7"
+	annotationprocessorCompileOnly "com.google.auto.service:auto-service-annotations:1.0"
+	annotationprocessorAnnotationProcessor "com.google.auto.service:auto-service:1.0"
 
 	compileOnly "com.google.code.findbugs:jsr305:3.0.2"
 }
@@ -62,6 +64,11 @@ tasks.withType(JavaCompile).configureEach {
 java {
 	withSourcesJar()
 	withJavadocJar()
+}
+
+task processorJar(type: Jar, dependsOn: annotationprocessorClasses) {
+	archiveClassifier.set('processor')
+	from sourceSets.annotationprocessor.output
 }
 
 jar {
@@ -119,6 +126,7 @@ if (hasProperty('nexusUsername')) {
 					builtBy remapSourcesJar
 				}
 				artifact javadocJar
+				artifact processorJar
 				pom {
 					name = 'Annotated DI'
 					packaging = 'jar'

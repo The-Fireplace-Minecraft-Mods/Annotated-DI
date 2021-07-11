@@ -1,21 +1,20 @@
 package dev.the_fireplace.annotateddi.processor;
 
+import com.google.auto.service.AutoService;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonWriter;
 import dev.the_fireplace.annotateddi.api.di.Implementation;
 
-import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.RoundEnvironment;
-import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.annotation.processing.SupportedSourceVersion;
+import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
-import javax.tools.JavaFileObject;
+import javax.tools.FileObject;
+import javax.tools.StandardLocation;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.*;
@@ -23,6 +22,7 @@ import java.util.stream.Collectors;
 
 @SupportedAnnotationTypes("dev.the_fireplace.annotateddi.api.di.Implementation")
 @SupportedSourceVersion(SourceVersion.RELEASE_16)
+@AutoService(Processor.class)
 public final class ImplementationProcessor extends AbstractProcessor {
     private static final String VERSION = "${version}";
     private final Gson gson = new Gson();
@@ -32,6 +32,7 @@ public final class ImplementationProcessor extends AbstractProcessor {
         for (TypeElement annotation : annotations) {
             Set<? extends Element> annotatedElements = roundEnv.getElementsAnnotatedWith(annotation);
             List<Element> implementations = getValidAnnotatedElements(annotatedElements);
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "Valid @Implementation count: " + implementations.size());
             if (implementations.isEmpty()) {
                 continue;
             }
@@ -73,7 +74,7 @@ public final class ImplementationProcessor extends AbstractProcessor {
 
     private void writeJsonToFile(JsonObject outputJson) {
         try {
-            JavaFileObject builderFile = processingEnv.getFiler().createSourceFile("annotated-di.json");
+            FileObject builderFile = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", "annotated-di.json");
             try (JsonWriter writer = gson.newJsonWriter(new BufferedWriter(builderFile.openWriter()))) {
                 gson.toJson(outputJson, writer);
             } catch (IOException e) {
@@ -139,10 +140,10 @@ public final class ImplementationProcessor extends AbstractProcessor {
     }
 
     private List<String> getExplicitInterfaces(Implementation implAnnotation) {
-        return Arrays.stream(implAnnotation.value()).map(Class::getName).collect(Collectors.toList());
+        return Arrays.stream(implAnnotation.value()).toList();
     }
 
     private boolean usesImplicitInterface(Implementation implAnnotation) {
-        return Arrays.equals(implAnnotation.value(), new Class[]{Object.class});
+        return Arrays.equals(implAnnotation.value(), new String[]{""});
     }
 }
