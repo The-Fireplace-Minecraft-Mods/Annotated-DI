@@ -14,6 +14,15 @@ plugins {
 sourceCompatibility = JavaVersion.VERSION_16
 targetCompatibility = JavaVersion.VERSION_16
 
+sourceSets {
+	annotationprocessor {
+		compileClasspath += sourceSets.main.output
+	}
+	main {
+
+	}
+}
+
 archivesBaseName = project.archives_base_name
 version = "${project.mod_version}+${project.minecraft_version}"
 group = project.maven_group
@@ -29,12 +38,12 @@ dependencies {
 
 	modImplementation "com.google.inject:guice:${project.guice_version}"
 	include "com.google.inject:guice:${project.guice_version}"
-	include "javax.inject:javax.inject:1"
-	include "aopalliance:aopalliance:1.0"
+	include 'javax.inject:javax.inject:1'
+	include 'aopalliance:aopalliance:1.0'
 
-	modImplementation "org.reflections:reflections:${project.reflections_version}"
-	include "org.reflections:reflections:${project.reflections_version}"
-	include "org.javassist:javassist:3.26.0-GA"
+	annotationprocessorImplementation "com.google.code.gson:gson:2.8.7"
+	annotationprocessorCompileOnly "com.google.auto.service:auto-service-annotations:1.0"
+	annotationprocessorAnnotationProcessor "com.google.auto.service:auto-service:1.0"
 
 	compileOnly "com.google.code.findbugs:jsr305:3.0.2"
 }
@@ -55,6 +64,21 @@ tasks.withType(JavaCompile).configureEach {
 java {
 	withSourcesJar()
 	withJavadocJar()
+}
+
+task processProcessorSource(type: Sync) {
+	from sourceSets.annotationprocessor.java
+	inputs.property 'version', version
+	expand "version": project.version
+	into "$buildDir/src"
+}
+compileAnnotationprocessorJava {
+	source = processProcessorSource.outputs
+}
+
+task processorJar(type: Jar, dependsOn: annotationprocessorClasses) {
+	archiveClassifier.set('processor')
+	from sourceSets.annotationprocessor.output
 }
 
 jar {
@@ -112,6 +136,7 @@ if (hasProperty('nexusUsername')) {
 					builtBy remapSourcesJar
 				}
 				artifact javadocJar
+				artifact processorJar
 				pom {
 					name = 'Annotated DI'
 					packaging = 'jar'

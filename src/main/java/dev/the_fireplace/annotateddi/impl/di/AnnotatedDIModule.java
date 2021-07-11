@@ -1,61 +1,153 @@
 package dev.the_fireplace.annotateddi.impl.di;
 
+import com.google.gson.*;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
-import dev.the_fireplace.annotateddi.api.di.Implementation;
-import dev.the_fireplace.annotateddi.impl.reflections.MagicAtUrlType;
-import net.fabricmc.loader.api.FabricLoader;
-import org.reflections.Reflections;
-import org.reflections.util.ConfigurationBuilder;
-import org.reflections.vfs.Vfs;
+import dev.the_fireplace.annotateddi.impl.AnnotatedDI;
+import net.fabricmc.loader.launch.common.FabricLauncherBase;
+import net.fabricmc.loader.util.FileSystemUtil;
+import net.fabricmc.loader.util.UrlConversionException;
+import net.fabricmc.loader.util.UrlUtil;
 
 import javax.annotation.Nullable;
-import java.io.*;
-import java.util.Arrays;
-import java.util.Set;
-import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.zip.ZipError;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public final class AnnotatedDIModule extends AbstractModule {
+    public static final String DI_CONFIG_FILE_NAME = "annotated-di.json";
+
     @Override
     protected void configure() {
-        ImplementationCache implementationCache = ImplementationCache.load();
-        Set<Class<?>> implementations;
-        String modList = FabricLoader.getInstance().getAllMods().stream().map(
-            modContainer -> modContainer.getMetadata().getId() + "@" + modContainer.getMetadata().getVersion()
-        ).sorted().collect(Collectors.joining(";"));
-        if (implementationCache != null && modList.equals(implementationCache.modList)) {
-            bindImplementations(Arrays.asList(implementationCache.implementations));
-            return;
-        }
-        implementations = getImplementationsUsingReflections();
+        Set<ImplementationContainer> implementations = findImplementations();
         bindImplementations(implementations);
-        implementationCache = new ImplementationCache();
-        implementationCache.modList = modList;
-        implementationCache.implementations = implementations.toArray(new Class[0]);
-        implementationCache.save();
     }
 
-    private void bindImplementations(Iterable<Class<?>> implementations) {
-        for (Class implementation : implementations) {
-            bindImplementationToInterface(implementation);
+    private void bindImplementations(Iterable<ImplementationContainer> modImplementations) {
+        for (ImplementationContainer modImplementationData : modImplementations) {
+            for (ImplementationData implementationData : modImplementationData.implementations) {
+                bindImplementationToInterface(
+                    implementationData.implementation,
+                    implementationData.interfaces.toArray(new Class[0]),
+                    implementationData.name
+                );
+            }
         }
     }
 
-    private Set<Class<?>> getImplementationsUsingReflections() {
-        Vfs.UrlType magicATUrl = new MagicAtUrlType();
-        Vfs.addDefaultURLTypes(magicATUrl);
-        ConfigurationBuilder reflectionConfig = getReflectionConfig();
-        Reflections reflections = new Reflections(reflectionConfig);
+    private Set<ImplementationContainer> findImplementations() {
+        try {
+            Enumeration<URL> diConfigFileUrls = FabricLauncherBase.getLauncher().getTargetClassLoader().getResources(DI_CONFIG_FILE_NAME);
+            Set<Path> validConfigFilePaths = getConfigFilePaths(diConfigFileUrls);
 
-        return reflections.getTypesAnnotatedWith(Implementation.class);
+            return getImplementationContainersFromConfigs(validConfigFilePaths);
+        } catch (IOException e) {
+            AnnotatedDI.getLogger().error("Exception when scanning for implementations!", e);
+        }
+
+        return Set.of();
     }
 
-    private void bindImplementationToInterface(Class implementation) {
-        Implementation annotation = (Implementation) implementation.getAnnotation(Implementation.class);
-        Class<?>[] injectableInterfaces = annotation.value();
-        String name = annotation.name();
+    private Set<Path> getConfigFilePaths(Enumeration<URL> mods) {
+        Set<Path> modsList = new HashSet<>();
+
+        while (mods.hasMoreElements()) {
+            URL url;
+            try {
+                url = UrlUtil.getSource(DI_CONFIG_FILE_NAME, mods.nextElement());
+            } catch (UrlConversionException e) {
+                AnnotatedDI.getLogger().error("Error getting DI config's source!", e);
+                continue;
+            }
+            Path normalizedPath, configJsonPath;
+            try {
+                normalizedPath = UrlUtil.asPath(url).normalize();
+            } catch (UrlConversionException e) {
+                throw new RuntimeException("Failed to convert URL " + url + "!", e);
+            }
+
+            if (Files.isDirectory(normalizedPath)) {
+                configJsonPath = normalizedPath.resolve(DI_CONFIG_FILE_NAME);
+            } else {
+                // JAR file
+                try {
+                    FileSystemUtil.FileSystemDelegate jarFs = FileSystemUtil.getJarFileSystem(normalizedPath, false);
+                    configJsonPath = jarFs.get().getPath(DI_CONFIG_FILE_NAME);
+                } catch (IOException e) {
+                    AnnotatedDI.getLogger().error("Failed to open JAR at " + normalizedPath + "!", e);
+                    continue;
+                } catch (ZipError e) {
+                    AnnotatedDI.getLogger().error("Jar at " + normalizedPath + " is corrupted!", e);
+                    continue;
+                }
+            }
+            modsList.add(configJsonPath);
+        }
+
+        return modsList;
+    }
+
+    private Set<ImplementationContainer> getImplementationContainersFromConfigs(Set<Path> configFilePaths) {
+        Set<ImplementationContainer> implementationContainers = new HashSet<>();
+
+        for (Path path : configFilePaths) {
+            ImplementationContainer implementationContainer = readImplementationContainerFromPath(path);
+
+            if (implementationContainer != null) {
+                implementationContainers.add(implementationContainer);
+            }
+        }
+
+        return implementationContainers;
+    }
+
+    @Nullable
+    private ImplementationContainer readImplementationContainerFromPath(Path path) {
+        ImplementationContainer implementationContainer = null;
+
+        JsonParser jsonParser = new JsonParser();
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(Files.newInputStream(path), StandardCharsets.UTF_8))) {
+            JsonElement jsonElement = jsonParser.parse(br);
+            if (jsonElement instanceof JsonObject jsonObject) {
+                implementationContainer = readImplementationContainerJson(jsonObject);
+            }
+        } catch (IOException | JsonParseException | ClassNotFoundException e) {
+            AnnotatedDI.getLogger().error("Exception when reading implementation file!", e);
+        }
+
+        return implementationContainer;
+    }
+
+    private ImplementationContainer readImplementationContainerJson(JsonObject jsonObject) throws ClassNotFoundException {
+        JsonArray modImplementations = jsonObject.getAsJsonArray("implementations");
+        List<ImplementationData> implementationDatas = new ArrayList<>();
+        for (JsonElement element : modImplementations) {
+            JsonObject implementationObj = (JsonObject) element;
+            JsonArray interfaceNames = implementationObj.getAsJsonArray("interfaces");
+            List<Class> interfaces = new ArrayList<>();
+            for (JsonElement interfaceName : interfaceNames) {
+                interfaces.add(stringToClass(interfaceName.getAsString()));
+            }
+            implementationDatas.add(new ImplementationData(
+                stringToClass(implementationObj.get("class").getAsString()),
+                interfaces,
+                implementationObj.has("namedImplementation")
+                    ? implementationObj.get("namedImplementation").getAsString()
+                    : ""
+            ));
+        }
+
+        return new ImplementationContainer(jsonObject.get("version").getAsString(), implementationDatas);
+    }
+
+    private void bindImplementationToInterface(Class implementation, Class[] injectableInterfaces, String name) {
         if (!Arrays.equals(injectableInterfaces, new Class[]{Object.class})) {
             for (Class injectableInterface : injectableInterfaces) {
                 bindWithOptionalName(injectableInterface, implementation, name);
@@ -80,36 +172,10 @@ public final class AnnotatedDIModule extends AbstractModule {
         }
     }
 
-    private ConfigurationBuilder getReflectionConfig() {
-        return ConfigurationBuilder.build(
-            Executors.newFixedThreadPool(128)
-        );
+    private Class stringToClass(String className) throws ClassNotFoundException {
+        return Class.forName(className);
     }
 
-    private static final class ImplementationCache implements Serializable {
-        @Serial
-        private static final long serialVersionUID = 0x110;
-        private transient static final String CACHE_FILE = FabricLoader.getInstance().getGameDir().resolve("di_implementations.ser").toString();
-        private String modList;
-        private Class<?>[] implementations;
-
-        private ImplementationCache() {}
-
-        @Nullable
-        private static ImplementationCache load() {
-            try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(CACHE_FILE))) {
-                return (ImplementationCache) in.readObject();
-            } catch (Exception e) {
-                return null;
-            }
-        }
-
-        private void save() {
-            try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(CACHE_FILE))) {
-                out.writeObject(this);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
+    private record ImplementationContainer(String version, List<ImplementationData> implementations) {}
+    private record ImplementationData(Class implementation, List<Class> interfaces, String name) {}
 }
