@@ -1,1 +1,1 @@
-Improved loading performance
+Improved performance - reworked to process annotations on compile instead of scanning at runtime.
