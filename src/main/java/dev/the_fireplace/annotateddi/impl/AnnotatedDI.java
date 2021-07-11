@@ -11,9 +11,15 @@ import dev.the_fireplace.annotateddi.impl.di.AnnotatedDIModule;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public final class AnnotatedDI implements ModInitializer {
     public static final String MODID = "annotateddi";
+    private static final Logger LOGGER = LogManager.getLogger(MODID);
+    public static Logger getLogger() {
+        return LOGGER;
+    }
 
     private static Injector injector = null;
     public static Injector getInjector() {
