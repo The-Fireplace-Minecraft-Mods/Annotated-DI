@@ -65,6 +65,8 @@ java {
 	withJavadocJar()
 }
 
+javadoc.options.addStringOption('Xdoclint:none', '-quiet')
+
 task processProcessorSource(type: Sync) {
 	from sourceSets.annotationprocessor.java
 	inputs.property 'version', version
