@@ -30,39 +30,52 @@ public final class ImplementationProcessor extends AbstractProcessor {
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         for (TypeElement annotation : annotations) {
             Set<? extends Element> annotatedElements = roundEnv.getElementsAnnotatedWith(annotation);
-            Map<Boolean, List<Element>> annotatedClasses = annotatedElements.stream().collect(
-                Collectors.partitioningBy(this::isValidAnnotatedElement)
-            );
-            List<Element> implementations = annotatedClasses.get(true);
-            List<Element> notImplementations = annotatedClasses.get(false);
-            notImplementations.forEach(this::logImplementationError);
+            List<Element> implementations = getValidAnnotatedElements(annotatedElements);
             if (implementations.isEmpty()) {
                 continue;
             }
 
-            JsonArray outputJson = new JsonArray();
-
-            for (Element implementationElement : implementations) {
-                Implementation implAnnotation = implementationElement.getAnnotation(Implementation.class);
-                List<String> interfaceNames = getInterfaceNames((TypeElement) implementationElement, implAnnotation);
-                JsonObject implementationJson = createImplementationJsonObject(implementationElement, interfaceNames, implAnnotation.name());
-
-                outputJson.add(implementationJson);
-            }
-
-            try {
-                JavaFileObject builderFile = processingEnv.getFiler().createSourceFile("annotated-di.json");
-                try (JsonWriter writer = gson.newJsonWriter(new BufferedWriter(builderFile.openWriter()))) {
-                    gson.toJson(outputJson, writer);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            writeJsonToFile(convertImplementationsToJson(implementations));
         }
 
         return false;
+    }
+
+    private List<Element> getValidAnnotatedElements(Set<? extends Element> annotatedElements) {
+        Map<Boolean, List<Element>> annotatedClasses = annotatedElements.stream().collect(
+            Collectors.partitioningBy(this::isValidAnnotatedElement)
+        );
+        List<Element> validAnnotatedClasses = annotatedClasses.get(true);
+        List<Element> invalidAnnotatedClasses = annotatedClasses.get(false);
+        invalidAnnotatedClasses.forEach(this::logImplementationError);
+
+        return validAnnotatedClasses;
+    }
+
+    private JsonArray convertImplementationsToJson(List<Element> implementations) {
+        JsonArray outputJson = new JsonArray();
+
+        for (Element implementationElement : implementations) {
+            Implementation implAnnotation = implementationElement.getAnnotation(Implementation.class);
+            List<String> interfaceNames = getInterfaceNames((TypeElement) implementationElement, implAnnotation);
+            JsonObject implementationJson = createImplementationJsonObject(implementationElement, interfaceNames, implAnnotation.name());
+
+            outputJson.add(implementationJson);
+        }
+        return outputJson;
+    }
+
+    private void writeJsonToFile(JsonArray outputJson) {
+        try {
+            JavaFileObject builderFile = processingEnv.getFiler().createSourceFile("annotated-di.json");
+            try (JsonWriter writer = gson.newJsonWriter(new BufferedWriter(builderFile.openWriter()))) {
+                gson.toJson(outputJson, writer);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private List<String> getInterfaceNames(TypeElement implementationElement, Implementation implAnnotation) {
