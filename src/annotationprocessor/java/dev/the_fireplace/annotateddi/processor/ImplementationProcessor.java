@@ -12,6 +12,7 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
@@ -30,54 +31,29 @@ public final class ImplementationProcessor extends AbstractProcessor {
         for (TypeElement annotation : annotations) {
             Set<? extends Element> annotatedElements = roundEnv.getElementsAnnotatedWith(annotation);
             Map<Boolean, List<Element>> annotatedClasses = annotatedElements.stream().collect(
-                Collectors.partitioningBy(element -> {
-                    //TODO Filter out invalid
-                    return true;
-                }));
+                Collectors.partitioningBy(this::isValidAnnotatedElement)
+            );
             List<Element> implementations = annotatedClasses.get(true);
             List<Element> notImplementations = annotatedClasses.get(false);
-            notImplementations.forEach(element ->
-                processingEnv.getMessager().printMessage(
-                    Diagnostic.Kind.ERROR,
-                    "@Implementation must be applied to a class which implements a single Interface, or provide the name(s) of the Interface(s) to implement.",
-                    element
-                )
-            );
+            notImplementations.forEach(this::logImplementationError);
             if (implementations.isEmpty()) {
                 continue;
             }
 
-            JsonArray outputObject = new JsonArray();
+            JsonArray outputJson = new JsonArray();
 
             for (Element implementationElement : implementations) {
                 Implementation implAnnotation = implementationElement.getAnnotation(Implementation.class);
+                List<String> interfaceNames = getInterfaceNames((TypeElement) implementationElement, implAnnotation);
+                JsonObject implementationJson = createImplementationJsonObject(implementationElement, interfaceNames, implAnnotation.name());
 
-                List<String> interfaces = new ArrayList<>();
-                if (Arrays.equals(implAnnotation.value(), new Class[]{Object.class})) {
-                    interfaces.add(((TypeElement)implementationElement).getInterfaces().get(0).toString());
-                } else {
-                    interfaces.addAll(Arrays.stream(implAnnotation.value()).map(Class::getName).collect(Collectors.toList()));
-                }
-
-                String name = implAnnotation.name();
-                JsonObject implementationData = new JsonObject();
-                implementationData.addProperty("class", implementationElement.asType().toString());
-                if (!name.isBlank()) {
-                    implementationData.addProperty("namedImplementation", name);
-                }
-                JsonArray interfaceArray = new JsonArray();
-                for (String interfaceStr: interfaces) {
-                    interfaceArray.add(interfaceStr);
-                }
-                implementationData.add("interfaces", interfaceArray);
-
-                outputObject.add(implementationData);
+                outputJson.add(implementationJson);
             }
 
             try {
-                JavaFileObject builderFile = processingEnv.getFiler().createSourceFile("test.json");
+                JavaFileObject builderFile = processingEnv.getFiler().createSourceFile("annotated-di.json");
                 try (JsonWriter writer = gson.newJsonWriter(new BufferedWriter(builderFile.openWriter()))) {
-                    gson.toJson(outputObject, writer);
+                    gson.toJson(outputJson, writer);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -87,5 +63,67 @@ public final class ImplementationProcessor extends AbstractProcessor {
         }
 
         return false;
+    }
+
+    private List<String> getInterfaceNames(TypeElement implementationElement, Implementation implAnnotation) {
+        List<String> interfaces = new ArrayList<>();
+        if (usesImplicitInterface(implAnnotation)) {
+            interfaces.add(getImplicitInterface(implementationElement));
+        } else {
+            interfaces.addAll(getExplicitInterfaces(implAnnotation));
+        }
+        return interfaces;
+    }
+
+    private boolean isValidAnnotatedElement(Element element) {
+        if (element.getKind() != ElementKind.CLASS) {
+            return false;
+        }
+        Implementation implAnnotation = element.getAnnotation(Implementation.class);
+        if (implAnnotation == null) {
+            return false;
+        }
+
+        if (usesImplicitInterface(implAnnotation)) {
+            return ((TypeElement) element).getInterfaces().size() == 1;
+        }
+
+        return true;
+    }
+
+    private void logImplementationError(Element element) {
+        processingEnv.getMessager().printMessage(
+            Diagnostic.Kind.ERROR,
+            "@Implementation must be applied to a class which implements a single Interface, or provide the name(s) of the Interface(s) to implement.",
+            element
+        );
+    }
+
+    private JsonObject createImplementationJsonObject(Element implementationElement, List<String> interfaceNames, String namedImplementationName) {
+        JsonObject output = new JsonObject();
+
+        output.addProperty("class", implementationElement.asType().toString());
+        if (!namedImplementationName.isBlank()) {
+            output.addProperty("namedImplementation", namedImplementationName);
+        }
+        JsonArray interfacesJsonArray = new JsonArray();
+        for (String interfaceName: interfaceNames) {
+            interfacesJsonArray.add(interfaceName);
+        }
+        output.add("interfaces", interfacesJsonArray);
+
+        return output;
+    }
+
+    private String getImplicitInterface(TypeElement implementationElement) {
+        return implementationElement.getInterfaces().get(0).toString();
+    }
+
+    private List<String> getExplicitInterfaces(Implementation implAnnotation) {
+        return Arrays.stream(implAnnotation.value()).map(Class::getName).collect(Collectors.toList());
+    }
+
+    private boolean usesImplicitInterface(Implementation implAnnotation) {
+        return Arrays.equals(implAnnotation.value(), new Class[]{Object.class});
     }
 }
