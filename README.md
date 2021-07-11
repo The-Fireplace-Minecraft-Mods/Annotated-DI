@@ -8,6 +8,7 @@ To use this with your mod, include the following in `build.gradle`:
 ```
 dependencies {
   modImplementation "dev.the-fireplace:Annotated-DI:${project.annotateddi_version}"
+  annotationProcessor "dev.the-fireplace:Annotated-DI:${project.annotateddi_version}:processor"
 }
 ```
 And in `gradle.properties`:
