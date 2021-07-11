@@ -66,6 +66,16 @@ java {
 	withJavadocJar()
 }
 
+task processProcessorSource(type: Sync) {
+	from sourceSets.annotationprocessor.java
+	inputs.property 'version', version
+	expand "version": project.version
+	into "$buildDir/src"
+}
+compileAnnotationprocessorJava {
+	source = processProcessorSource.outputs
+}
+
 task processorJar(type: Jar, dependsOn: annotationprocessorClasses) {
 	archiveClassifier.set('processor')
 	from sourceSets.annotationprocessor.output
