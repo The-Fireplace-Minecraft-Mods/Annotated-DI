@@ -41,6 +41,8 @@ dependencies {
 	include 'javax.inject:javax.inject:1'
 	include 'aopalliance:aopalliance:1.0'
 
+	annotationprocessorImplementation "com.google.code.gson:gson:2.8.0"
+
 	compileOnly "com.google.code.findbugs:jsr305:3.0.2"
 }
 
