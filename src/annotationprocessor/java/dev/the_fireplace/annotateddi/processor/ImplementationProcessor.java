@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 @SupportedAnnotationTypes("dev.the_fireplace.annotateddi.api.di.Implementation")
 @SupportedSourceVersion(SourceVersion.RELEASE_16)
 public final class ImplementationProcessor extends AbstractProcessor {
+    private static final String VERSION = "${version}";
     private final Gson gson = new Gson();
 
     @Override
@@ -52,20 +53,25 @@ public final class ImplementationProcessor extends AbstractProcessor {
         return validAnnotatedClasses;
     }
 
-    private JsonArray convertImplementationsToJson(List<Element> implementations) {
-        JsonArray outputJson = new JsonArray();
+    private JsonObject convertImplementationsToJson(List<Element> implementations) {
+        JsonArray outputImplementationsJson = new JsonArray();
 
         for (Element implementationElement : implementations) {
             Implementation implAnnotation = implementationElement.getAnnotation(Implementation.class);
             List<String> interfaceNames = getInterfaceNames((TypeElement) implementationElement, implAnnotation);
             JsonObject implementationJson = createImplementationJsonObject(implementationElement, interfaceNames, implAnnotation.name());
 
-            outputJson.add(implementationJson);
+            outputImplementationsJson.add(implementationJson);
         }
+
+        JsonObject outputJson = new JsonObject();
+        outputJson.addProperty("version", VERSION);
+        outputJson.add("implementations", outputImplementationsJson);
+
         return outputJson;
     }
 
-    private void writeJsonToFile(JsonArray outputJson) {
+    private void writeJsonToFile(JsonObject outputJson) {
         try {
             JavaFileObject builderFile = processingEnv.getFiler().createSourceFile("annotated-di.json");
             try (JsonWriter writer = gson.newJsonWriter(new BufferedWriter(builderFile.openWriter()))) {
