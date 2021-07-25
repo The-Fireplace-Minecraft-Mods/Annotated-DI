@@ -1,1 +1,1 @@
-Dev environment fix: guava version causing crash on 1.14.4
+Fix crash when loading dedicated server
