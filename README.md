@@ -16,6 +16,8 @@ And in `gradle.properties`:
 annotateddi_version=<mod version>+<minecraft version>
 ```
 
+After that, edit your `fabric.mod.json` to use `di-main` entrypoint and implement your main entrypoint with `DIModInitializer` instead of `ModInitializer`
+
 ## Usage
 A simple example of how the custom `@Implementation` annotation is used:
 NetworkInterface.java
