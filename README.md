@@ -16,7 +16,15 @@ And in `gradle.properties`:
 annotateddi_version=<mod version>+<minecraft version>
 ```
 
-After that, the easiest way to get access to the Injector (and make sure it's ready to use by the time your mod initializes) is to use the DI versions of the standard entrypoints. To do so, edit your `fabric.mod.json` to add `di-` in front of the `main`, `client`, or `server` entrypoint name, making it `di-main`, `di-client`, or `di-server`, respectively. Then switch the interface your entrypoint uses for the DI equivalent: `ModInitializer` => `DIModInitializer`, `ClientModInitializer` => `ClientDIModInitializer`, or `DedicatedServerModInitializer` => `DedicatedServerDIModInitializer`. The initialization functions will now take one parameter, the Injector.
+After that, the easiest way to get access to the Injector (and make sure it's ready to use by the time your mod initializes) is to use the DI versions of the standard entrypoints. To do so, edit your `fabric.mod.json` to add `di-` in front of the `main`, `client`, or `server` entrypoint name, making it `di-main`, `di-client`, or `di-server`, respectively. Then switch the interface your entrypoint uses for the DI equivalent:
+
+`ModInitializer` => `DIModInitializer`
+
+`ClientModInitializer` => `ClientDIModInitializer`
+
+`DedicatedServerModInitializer` => `DedicatedServerDIModInitializer`
+
+The initialization functions will now take one parameter, the Injector.
 
 ## Usage
 A simple example of how the custom `@Implementation` annotation is used:
