@@ -52,6 +52,9 @@ public final class ImplementationProcessor extends AbstractProcessor {
         List<Element> validAnnotatedClasses = annotatedClasses.get(true);
         List<Element> invalidAnnotatedClasses = annotatedClasses.get(false);
         invalidAnnotatedClasses.forEach(this::logImplementationError);
+        if (!invalidAnnotatedClasses.isEmpty()) {
+            throw new ImplementationProcessingError();
+        }
 
         return validAnnotatedClasses;
     }
