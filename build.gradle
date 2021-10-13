@@ -37,7 +37,7 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	modImplementation("com.google.inject:guice:${project.guice_version}") {
-		exclude(group: "com.google.guava")
+		exclude(group: 'com.google.guava')
 	}
 	include "com.google.inject:guice:${project.guice_version}"
 	include 'javax.inject:javax.inject:1'
@@ -48,20 +48,20 @@ dependencies {
 	annotationprocessorCompileOnly "com.google.auto.service:auto-service-annotations:${project.autoservice_version}"
 	annotationprocessorAnnotationProcessor "com.google.auto.service:auto-service:${project.autoservice_version}"
 
-	compileOnly "com.google.code.findbugs:jsr305:3.0.2"
+	compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
 }
 
 processResources {
-	inputs.property "version", project.version
+	inputs.property 'version', project.version
 
-	filesMatching("fabric.mod.json") {
-		expand "version": project.version
+	filesMatching('fabric.mod.json') {
+		expand 'version': project.version
 	}
 }
 
 tasks.withType(JavaCompile).configureEach {
-	it.options.encoding = "UTF-8"
-	it.options.release = 16
+	it.options.encoding = 'UTF-8'
+	it.options.release.set(16)
 }
 
 java {
@@ -74,7 +74,7 @@ javadoc.options.addStringOption('Xdoclint:none', '-quiet')
 task processProcessorSource(type: Sync) {
 	from sourceSets.annotationprocessor.java
 	inputs.property 'version', version
-	expand "version": project.version
+	expand 'version': project.version
 	into "$buildDir/src"
 }
 
@@ -88,7 +88,7 @@ task processorJar(type: Jar, dependsOn: annotationprocessorClasses) {
 }
 
 jar {
-	from("LICENSE") {
+	from('LICENSE') {
 		rename { "${it}_${project.archivesBaseName}"}
 	}
 }
@@ -104,7 +104,7 @@ if (hasProperty('curseForgeApiKey')) {
 			addGameVersion '1.17'
 			addGameVersion 'Java 16'
 			addGameVersion 'Fabric'
-			mainArtifact(new File(new File(buildDir, "libs"), "$archivesBaseName-${version}.jar")) {
+			mainArtifact(new File(new File(buildDir, 'libs'), "$archivesBaseName-${version}.jar")) {
 				displayName = "$archivesBaseName-$version"
 			}
 		}
@@ -122,7 +122,7 @@ if (hasProperty('modrinthApiKey')) {
 		projectId = 'RAXqYPH1'
 		versionNumber = version
 		versionName = project.mod_version
-		uploadFile = new File(new File(buildDir, "libs"), "$archivesBaseName-${version}.jar")
+		uploadFile = new File(new File(buildDir, 'libs'), "$archivesBaseName-${version}.jar")
 		changelog = file('changelog.txt').getText()
 		releaseType = project.release_type
 		addGameVersion(project.minecraft_version as String)
