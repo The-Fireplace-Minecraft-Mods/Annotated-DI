@@ -1,1 +1,2 @@
 Updated to require (and no longer crash with) Fabric Loader 0.12+
+Annotation Processor will now throw an error when a bad annotation is found, hopefully stopping the build.
