@@ -8,7 +8,6 @@ import dev.the_fireplace.annotateddi.impl.UrlUtil;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.impl.util.FileSystemUtil;
-import net.fabricmc.loader.launch.common.FabricLauncherBase;
 
 import javax.annotation.Nullable;
 import java.io.BufferedReader;
@@ -46,7 +45,7 @@ public final class AnnotatedDIModule extends AbstractModule {
 
     private Set<ImplementationContainer> findImplementations() {
         try {
-            Enumeration<URL> diConfigFileUrls = FabricLauncherBase.getLauncher().getTargetClassLoader().getResources(DI_CONFIG_FILE_NAME);
+            Enumeration<URL> diConfigFileUrls = this.getClass().getClassLoader().getResources(DI_CONFIG_FILE_NAME);
             Set<Path> validConfigFilePaths = getConfigFilePaths(diConfigFileUrls);
 
             return getImplementationContainersFromConfigs(validConfigFilePaths);
