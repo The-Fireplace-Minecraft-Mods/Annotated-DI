@@ -4,17 +4,17 @@ import com.google.gson.*;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import dev.the_fireplace.annotateddi.impl.AnnotatedDI;
+import dev.the_fireplace.annotateddi.impl.UrlUtil;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.impl.util.FileSystemUtil;
 import net.fabricmc.loader.launch.common.FabricLauncherBase;
-import net.fabricmc.loader.util.FileSystemUtil;
-import net.fabricmc.loader.util.UrlConversionException;
-import net.fabricmc.loader.util.UrlUtil;
 
 import javax.annotation.Nullable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -64,14 +64,14 @@ public final class AnnotatedDIModule extends AbstractModule {
             URL url;
             try {
                 url = UrlUtil.getSource(DI_CONFIG_FILE_NAME, mods.nextElement());
-            } catch (UrlConversionException e) {
+            } catch (Exception e) {
                 AnnotatedDI.getLogger().error("Error getting DI config's source!", e);
                 continue;
             }
             Path normalizedPath, configJsonPath;
             try {
                 normalizedPath = UrlUtil.asPath(url).normalize();
-            } catch (UrlConversionException e) {
+            } catch (URISyntaxException e) {
                 throw new RuntimeException("Failed to convert URL " + url + "!", e);
             }
 

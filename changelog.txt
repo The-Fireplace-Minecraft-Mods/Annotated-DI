@@ -1,1 +1,1 @@
-Fix crash when loading dedicated server
+Updated to require (and no longer crash with) Fabric Loader 0.12+
