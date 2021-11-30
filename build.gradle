@@ -87,10 +87,16 @@ task processorJar(type: Jar, dependsOn: annotationprocessorClasses) {
 	from sourceSets.annotationprocessor.output
 }
 
+build.dependsOn(processorJar)
+
 jar {
 	from('LICENSE') {
 		rename { "${it}_${project.archivesBaseName}"}
 	}
+}
+
+configurations {
+	apiElements.outgoing.artifact(processorJar)
 }
 
 if (hasProperty('curseForgeApiKey')) {
@@ -135,14 +141,7 @@ if (hasProperty('nexusUsername')) {
 	publishing {
 		publications {
 			mavenJava(MavenPublication) {
-				artifact(remapJar) {
-					builtBy remapJar
-				}
-				artifact(sourcesJar) {
-					builtBy remapSourcesJar
-				}
-				artifact javadocJar
-				artifact processorJar
+				from components.java
 				pom {
 					name = 'Annotated DI'
 					packaging = 'jar'
