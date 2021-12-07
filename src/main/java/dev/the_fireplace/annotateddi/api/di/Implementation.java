@@ -7,4 +7,6 @@ import java.lang.annotation.Target;
 public @interface Implementation {
     String[] value() default "";
     String name() default "";
+
+    boolean allInterfaces() default false;
 }

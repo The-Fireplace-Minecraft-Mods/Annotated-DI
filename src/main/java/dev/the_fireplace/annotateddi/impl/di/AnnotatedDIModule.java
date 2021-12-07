@@ -37,7 +37,8 @@ public final class AnnotatedDIModule extends AbstractModule {
                 bindImplementationToInterface(
                     implementationData.implementation,
                     implementationData.interfaces.toArray(new Class[0]),
-                    implementationData.name
+                    implementationData.name,
+                    implementationData.useAllInterfaces
                 );
             }
         }
@@ -145,7 +146,8 @@ public final class AnnotatedDIModule extends AbstractModule {
                 interfaces,
                 implementationObj.has("namedImplementation")
                     ? implementationObj.get("namedImplementation").getAsString()
-                    : ""
+                    : "",
+                implementationObj.has("useAllInterfaces") && implementationObj.get("useAllInterfaces").getAsBoolean()
             ));
         }
 
@@ -157,7 +159,7 @@ public final class AnnotatedDIModule extends AbstractModule {
             && !FabricLoader.getInstance().getEnvironmentType().equals(EnvType.valueOf(implementationObj.get("environment").getAsString()));
     }
 
-    private void bindImplementationToInterface(Class implementation, Class[] injectableInterfaces, String name) {
+    private void bindImplementationToInterface(Class implementation, Class[] injectableInterfaces, String name, boolean useAllInterfaces) {
         if (!Arrays.equals(injectableInterfaces, new Class[]{Object.class})) {
             for (Class injectableInterface : injectableInterfaces) {
                 bindWithOptionalName(injectableInterface, implementation, name);
@@ -167,7 +169,13 @@ public final class AnnotatedDIModule extends AbstractModule {
             if (interfaces.length == 1) {
                 bindWithOptionalName(interfaces[0], implementation, name);
             } else if (interfaces.length > 1) {
-                throw new ImplementationException(String.format("Multiple interfaces found for @Implementation annotated class %s, please set the value(s) to pick the correct one(s).", implementation.getCanonicalName()));
+                if (useAllInterfaces) {
+                    for (Class bindingInterface : interfaces) {
+                        bindWithOptionalName(bindingInterface, implementation, name);
+                    }
+                } else {
+                    throw new ImplementationException(String.format("Multiple interfaces found for @Implementation annotated class %s, please set the value(s) to pick the correct one(s).", implementation.getCanonicalName()));
+                }
             } else {
                 throw new ImplementationException(String.format("No interfaces found for @Implementation annotated class %s, please set the value(s) to pick the correct one(s).", implementation.getCanonicalName()));
             }
@@ -186,6 +194,12 @@ public final class AnnotatedDIModule extends AbstractModule {
         return Class.forName(className);
     }
 
-    private record ImplementationContainer(String version, List<ImplementationData> implementations) {}
-    private record ImplementationData(Class implementation, List<Class> interfaces, String name) {}
+    private record ImplementationContainer(String version, List<ImplementationData> implementations)
+    {
+    }
+
+    private record ImplementationData(Class implementation, List<Class> interfaces, String name,
+                                      boolean useAllInterfaces)
+    {
+    }
 }
