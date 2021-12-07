@@ -4,7 +4,11 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
 
 @Target(ElementType.TYPE)
-public @interface Implementation {
+public @interface Implementation
+{
     String[] value() default "";
+
     String name() default "";
+
+    boolean allInterfaces() default false;
 }

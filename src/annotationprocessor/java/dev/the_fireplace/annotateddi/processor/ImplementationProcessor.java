@@ -65,7 +65,12 @@ public final class ImplementationProcessor extends AbstractProcessor {
         for (Element implementationElement : implementations) {
             Implementation implAnnotation = implementationElement.getAnnotation(Implementation.class);
             List<String> interfaceNames = getInterfaceNames((TypeElement) implementationElement, implAnnotation);
-            JsonObject implementationJson = createImplementationJsonObject(implementationElement, interfaceNames, implAnnotation.name());
+            JsonObject implementationJson = createImplementationJsonObject(
+                implementationElement,
+                interfaceNames,
+                implAnnotation.name(),
+                implAnnotation.allInterfaces()
+            );
 
             outputImplementationsJson.add(implementationJson);
         }
@@ -108,7 +113,12 @@ public final class ImplementationProcessor extends AbstractProcessor {
         }
 
         if (usesImplicitInterface(implAnnotation)) {
-            return ((TypeElement) element).getInterfaces().size() == 1;
+            int interfaceCount = ((TypeElement) element).getInterfaces().size();
+            if (!implAnnotation.allInterfaces()) {
+                return interfaceCount == 1;
+            } else {
+                return interfaceCount >= 1;
+            }
         }
 
         return true;
@@ -122,7 +132,12 @@ public final class ImplementationProcessor extends AbstractProcessor {
         );
     }
 
-    private JsonObject createImplementationJsonObject(Element implementationElement, List<String> interfaceNames, String namedImplementationName) {
+    private JsonObject createImplementationJsonObject(
+        Element implementationElement,
+        List<String> interfaceNames,
+        String namedImplementationName,
+        boolean useAllInterfaces
+    ) {
         JsonObject output = new JsonObject();
 
         output.addProperty("class", implementationElement.asType().toString());
@@ -130,10 +145,11 @@ public final class ImplementationProcessor extends AbstractProcessor {
             output.addProperty("namedImplementation", namedImplementationName);
         }
         JsonArray interfacesJsonArray = new JsonArray();
-        for (String interfaceName: interfaceNames) {
+        for (String interfaceName : interfaceNames) {
             interfacesJsonArray.add(interfaceName);
         }
         output.add("interfaces", interfacesJsonArray);
+        output.addProperty("useAllInterfaces", useAllInterfaces);
 
         Environment environment = implementationElement.getAnnotation(Environment.class);
 
