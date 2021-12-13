@@ -21,8 +21,8 @@ public final class ClientLogicalSideChecker implements LogicalSideChecker
     }
 
     @Override
-    public @Nullable
-    EnvType getLogicalSide() {
+    @Nullable
+    public EnvType getLogicalSide() {
         if (server == null || client.isOnThread()) {
             return EnvType.CLIENT;
         }
