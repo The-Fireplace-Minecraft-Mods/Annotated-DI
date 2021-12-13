@@ -1,1 +1,2 @@
 Add ability to be implementation for all implemented interfaces without explicitly declaring them.
+Add logical side proxy handling for implementations (experimental)
