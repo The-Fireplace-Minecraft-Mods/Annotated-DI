@@ -18,8 +18,8 @@ public final class AnnotatedDIModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(LogicalSidedThreadFactory.class).to(LogicalSidedThreadFactoryImpl.class);
         bindLogicalSideChecker();
+        bind(LogicalSidedThreadFactory.class).to(LogicalSidedThreadFactoryImpl.class);
 
         Set<ImplementationContainer> implementations = new ImplementationScanner().findImplementations();
         bindImplementations(implementations);
