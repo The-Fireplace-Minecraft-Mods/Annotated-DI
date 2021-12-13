@@ -1,184 +1,121 @@
 package dev.the_fireplace.annotateddi.impl.di;
 
-import com.google.gson.*;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
-import dev.the_fireplace.annotateddi.impl.AnnotatedDI;
-import dev.the_fireplace.annotateddi.impl.UrlUtil;
+import dev.the_fireplace.annotateddi.api.injectable.LogicalSideChecker;
+import dev.the_fireplace.annotateddi.api.injectable.LogicalSidedThreadFactory;
+import dev.the_fireplace.annotateddi.impl.logicalside.ClientLogicalSideChecker;
+import dev.the_fireplace.annotateddi.impl.logicalside.DedicatedLogicalSide;
+import dev.the_fireplace.annotateddi.impl.logicalside.LogicalSidedThreadFactoryImpl;
+import dev.the_fireplace.annotateddi.impl.logicalside.StackTraceSide;
 import net.fabricmc.api.EnvType;
-import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.impl.util.FileSystemUtil;
 
 import javax.annotation.Nullable;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
-import java.util.zip.ZipError;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public final class AnnotatedDIModule extends AbstractModule {
-    public static final String DI_CONFIG_FILE_NAME = "annotated-di.json";
 
     @Override
     protected void configure() {
-        Set<ImplementationContainer> implementations = findImplementations();
+        bind(LogicalSidedThreadFactory.class).to(LogicalSidedThreadFactoryImpl.class);
+        bindLogicalSideChecker();
+
+        Set<ImplementationContainer> implementations = new ImplementationScanner().findImplementations();
         bindImplementations(implementations);
+    }
+
+    private void bindLogicalSideChecker() {
+        Class<? extends LogicalSideChecker> logicalSideChecker;
+        EnvType currentSide = StackTraceSide.get();
+        if (Objects.equals(currentSide, EnvType.SERVER)) {
+            logicalSideChecker = DedicatedLogicalSide.class;
+        } else if (Objects.equals(currentSide, EnvType.CLIENT)) {
+            logicalSideChecker = ClientLogicalSideChecker.class;
+        } else {
+            throw new IllegalStateException("Cannot bind logical side checker from unknown side!");
+        }
+        bind(LogicalSideChecker.class).to(logicalSideChecker);
     }
 
     private void bindImplementations(Iterable<ImplementationContainer> modImplementations) {
         for (ImplementationContainer modImplementationData : modImplementations) {
-            for (ImplementationData implementationData : modImplementationData.implementations) {
-                bindImplementationToInterface(
-                    implementationData.implementation,
-                    implementationData.interfaces.toArray(new Class[0]),
-                    implementationData.name,
-                    implementationData.useAllInterfaces
-                );
-            }
-        }
-    }
-
-    private Set<ImplementationContainer> findImplementations() {
-        try {
-            Enumeration<URL> diConfigFileUrls = this.getClass().getClassLoader().getResources(DI_CONFIG_FILE_NAME);
-            Set<Path> validConfigFilePaths = getConfigFilePaths(diConfigFileUrls);
-
-            return getImplementationContainersFromConfigs(validConfigFilePaths);
-        } catch (IOException e) {
-            AnnotatedDI.getLogger().error("Exception when scanning for implementations!", e);
-        }
-
-        return Set.of();
-    }
-
-    private Set<Path> getConfigFilePaths(Enumeration<URL> mods) {
-        Set<Path> modsList = new HashSet<>();
-
-        while (mods.hasMoreElements()) {
-            URL url;
-            try {
-                url = UrlUtil.getSource(DI_CONFIG_FILE_NAME, mods.nextElement());
-            } catch (Exception e) {
-                AnnotatedDI.getLogger().error("Error getting DI config's source!", e);
-                continue;
-            }
-            Path normalizedPath, configJsonPath;
-            try {
-                normalizedPath = UrlUtil.asPath(url).normalize();
-            } catch (URISyntaxException e) {
-                throw new RuntimeException("Failed to convert URL " + url + "!", e);
-            }
-
-            if (Files.isDirectory(normalizedPath)) {
-                configJsonPath = normalizedPath.resolve(DI_CONFIG_FILE_NAME);
-            } else {
-                // JAR file
-                try {
-                    FileSystemUtil.FileSystemDelegate jarFs = FileSystemUtil.getJarFileSystem(normalizedPath, false);
-                    configJsonPath = jarFs.get().getPath(DI_CONFIG_FILE_NAME);
-                } catch (IOException e) {
-                    AnnotatedDI.getLogger().error("Failed to open JAR at " + normalizedPath + "!", e);
-                    continue;
-                } catch (ZipError e) {
-                    AnnotatedDI.getLogger().error("Jar at " + normalizedPath + " is corrupted!", e);
-                    continue;
+            for (Map.Entry<Class, List<ImplementationData>> classImplementations : modImplementationData.implementations.entrySet()) {
+                if (classImplementations.getValue().size() == 1) {
+                    ImplementationData implementationData = classImplementations.getValue().get(0);
+                    bindImplementationData(implementationData);
+                } else if (canUseProxy(classImplementations.getValue())) {
+                    bindProxy(classImplementations.getKey(), classImplementations.getValue());
+                } else {
+                    for (ImplementationData implementationData : classImplementations.getValue()) {
+                        bindImplementationData(implementationData);
+                    }
                 }
             }
-            modsList.add(configJsonPath);
         }
-
-        return modsList;
     }
 
-    private Set<ImplementationContainer> getImplementationContainersFromConfigs(Set<Path> configFilePaths) {
-        Set<ImplementationContainer> implementationContainers = new HashSet<>();
-
-        for (Path path : configFilePaths) {
-            ImplementationContainer implementationContainer = readImplementationContainerFromPath(path);
-
-            if (implementationContainer != null) {
-                implementationContainers.add(implementationContainer);
-            }
-        }
-
-        return implementationContainers;
-    }
-
-    @Nullable
-    private ImplementationContainer readImplementationContainerFromPath(Path path) {
-        ImplementationContainer implementationContainer = null;
-
-        JsonParser jsonParser = new JsonParser();
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(Files.newInputStream(path), StandardCharsets.UTF_8))) {
-            JsonElement jsonElement = jsonParser.parse(br);
-            if (jsonElement instanceof JsonObject jsonObject) {
-                implementationContainer = readImplementationContainerJson(jsonObject);
-            }
-        } catch (IOException | JsonParseException | ClassNotFoundException e) {
-            AnnotatedDI.getLogger().error("Exception when reading implementation file!", e);
-        }
-
-        return implementationContainer;
-    }
-
-    private ImplementationContainer readImplementationContainerJson(JsonObject jsonObject) throws ClassNotFoundException {
-        JsonArray modImplementations = jsonObject.getAsJsonArray("implementations");
-        List<ImplementationData> implementationDatas = new ArrayList<>();
-        for (JsonElement element : modImplementations) {
-            JsonObject implementationObj = (JsonObject) element;
-            if (isOnWrongEnvironment(implementationObj)) {
+    private boolean canUseProxy(List<ImplementationData> implementationDatas) {
+        boolean hasSide = false;
+        boolean hasStandard = false;
+        for (ImplementationData data : implementationDatas) {
+            if (!data.name().isEmpty()) {
                 continue;
             }
-
-            JsonArray interfaceNames = implementationObj.getAsJsonArray("interfaces");
-            List<Class> interfaces = new ArrayList<>();
-            for (JsonElement interfaceName : interfaceNames) {
-                interfaces.add(stringToClass(interfaceName.getAsString()));
+            if (data.environment != null) {
+                hasSide = true;
+            } else {
+                hasStandard = true;
             }
-            implementationDatas.add(new ImplementationData(
-                stringToClass(implementationObj.get("class").getAsString()),
-                interfaces,
-                implementationObj.has("namedImplementation")
-                    ? implementationObj.get("namedImplementation").getAsString()
-                    : "",
-                implementationObj.has("useAllInterfaces") && implementationObj.get("useAllInterfaces").getAsBoolean()
-            ));
+            if (hasSide && hasStandard) {
+                return true;
+            }
         }
 
-        return new ImplementationContainer(jsonObject.get("version").getAsString(), implementationDatas);
+        return false;
     }
 
-    private boolean isOnWrongEnvironment(JsonObject implementationObj) {
-        return implementationObj.has("environment")
-            && !FabricLoader.getInstance().getEnvironmentType().equals(EnvType.valueOf(implementationObj.get("environment").getAsString()));
+    private void bindProxy(Class implementationClass, List<ImplementationData> implementationDatas) {
+        bind(implementationClass).toProvider(ProxyProviderFactory.getProvider(implementationClass, implementationDatas));
+        for (ImplementationData implementationData : implementationDatas) {
+            if (!implementationData.name().isEmpty()) {
+                bindImplementationData(implementationData);
+            }
+        }
+    }
+
+    private void bindImplementationData(ImplementationData implementationData) {
+        bindImplementationToInterface(
+            implementationData.implementation,
+            implementationData.interfaces.toArray(new Class[0]),
+            implementationData.name,
+            implementationData.useAllInterfaces
+        );
     }
 
     private void bindImplementationToInterface(Class implementation, Class[] injectableInterfaces, String name, boolean useAllInterfaces) {
-        if (!Arrays.equals(injectableInterfaces, new Class[]{Object.class})) {
-            for (Class injectableInterface : injectableInterfaces) {
-                bindWithOptionalName(injectableInterface, implementation, name);
-            }
+        boolean hasExplicitBindings = !Arrays.equals(injectableInterfaces, new Class[]{Object.class});
+        if (hasExplicitBindings) {
+            bindToInterfaces(implementation, injectableInterfaces, name);
         } else {
             Class[] interfaces = implementation.getInterfaces();
             if (interfaces.length == 1) {
                 bindWithOptionalName(interfaces[0], implementation, name);
             } else if (interfaces.length > 1) {
                 if (useAllInterfaces) {
-                    for (Class bindingInterface : interfaces) {
-                        bindWithOptionalName(bindingInterface, implementation, name);
-                    }
+                    bindToInterfaces(implementation, interfaces, name);
                 } else {
                     throw new ImplementationException(String.format("Multiple interfaces found for @Implementation annotated class %s, please set the value(s) to pick the correct one(s).", implementation.getCanonicalName()));
                 }
             } else {
                 throw new ImplementationException(String.format("No interfaces found for @Implementation annotated class %s, please set the value(s) to pick the correct one(s).", implementation.getCanonicalName()));
             }
+        }
+    }
+
+    private void bindToInterfaces(Class implementation, Class[] injectableInterfaces, String name) {
+        for (Class injectableInterface : injectableInterfaces) {
+            bindWithOptionalName(injectableInterface, implementation, name);
         }
     }
 
@@ -190,16 +127,17 @@ public final class AnnotatedDIModule extends AbstractModule {
         }
     }
 
-    private Class stringToClass(String className) throws ClassNotFoundException {
-        return Class.forName(className);
-    }
-
-    private record ImplementationContainer(String version, List<ImplementationData> implementations)
+    public record ImplementationContainer(String version, Map<Class, List<ImplementationData>> implementations)
     {
     }
 
-    private record ImplementationData(Class implementation, List<Class> interfaces, String name,
-                                      boolean useAllInterfaces)
+    public record ImplementationData(
+        Class implementation,
+        List<Class> interfaces,
+        String name,
+        boolean useAllInterfaces,
+        @Nullable EnvType environment
+    )
     {
     }
 }
