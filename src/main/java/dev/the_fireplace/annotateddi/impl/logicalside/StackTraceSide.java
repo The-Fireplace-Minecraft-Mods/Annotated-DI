@@ -11,6 +11,7 @@ import java.util.Set;
 
 public final class StackTraceSide
 {
+    //TODO Any more names to add? Netty? Worldgen? Intermediary names from prod?
     private static final Set<String> clientNames = Sets.newHashSet(
         "net.minecraft.client.main.Main",
         "net.minecraft.client.MinecraftClient",
