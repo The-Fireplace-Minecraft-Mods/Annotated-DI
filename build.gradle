@@ -26,6 +26,9 @@ sourceSets {
 archivesBaseName = project.archives_base_name
 version = "${project.mod_version}+${project.minecraft_version}"
 group = project.maven_group
+if (project.hasProperty('SNAPSHOT')) {
+	version = "${version}-${SNAPSHOT}-SNAPSHOT"
+}
 
 repositories {
 
@@ -161,7 +164,7 @@ if (hasProperty('modrinthApiKey')) {
 	}
 }
 
-if (hasProperty('nexusUsername')) {
+if (hasProperty('nexusUsername') || System.getenv("NEXUS_USERNAME") != null) {
 	publishing {
 		publications {
 			mavenJava(MavenPublication) {
@@ -200,8 +203,8 @@ if (hasProperty('nexusUsername')) {
 				def snapshotsRepoUrl = 'https://oss.sonatype.org/content/repositories/snapshots/'
 				url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
 				credentials {
-					username = nexusUsername
-					password = nexusPassword
+					username = nexusUsername ?: System.getenv("NEXUS_USERNAME")
+					password = nexusPassword ?: System.getenv("NEXUS_PASSWORD")
 				}
 			}
 		}
