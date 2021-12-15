@@ -37,3 +37,12 @@ jobs:
         with:
           name: Artifacts
           path: build/libs/
+      - name: Get short sha
+        id: vars
+        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+      - name: maven snapshot publish
+        if: ${{ runner.os == 'Linux' && matrix.java == '17' }} # Only upload artifacts built from latest java on one OS
+        run: ./gradlew build publish -PSNAPSHOT=${{ steps.vars.outputs.sha_short }}
+        env:
+          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+          NEXUS_PASSWORD: ${{ secrets.NEXUS_TOKEN }}
