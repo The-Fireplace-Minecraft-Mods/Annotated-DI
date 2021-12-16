@@ -26,6 +26,12 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: ${{ matrix.java }}
+      - name: Cache Gradle packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
+          restore-keys: ${{ runner.os }}-gradle
       - name: make gradle wrapper executable
         if: ${{ runner.os != 'Windows' }}
         run: chmod +x ./gradlew
@@ -43,10 +49,11 @@ jobs:
       - name: Install gpg secret key
         id: install-secret-key
         run: |
-          cat <(echo -e "${{ secrets.NEXUS_GPG_SECRET_KEY }}") | gpg --batch --import
+          echo "${{secrets.NEXUS_GPG_SECRET_KEY_RING_FILE}}" > ~/.gradle/secring.gpg.b64
+          base64 -d ~/.gradle/secring.gpg.b64 > ~/.gradle/secring.gpg
       - name: maven snapshot publish
         if: ${{ runner.os == 'Linux' && matrix.java == '17' }} # Only upload artifacts built from latest java on one OS
-        run: ./gradlew build publish -PSNAPSHOT=${{ steps.vars.outputs.sha_short }} -Dgpg.passphrase=${{ secrets.NEXUS_GPG_SECRET_KEY_PASSWORD }}
+        run: ./gradlew build publish -PSNAPSHOT=${{ steps.vars.outputs.sha_short }} -Psigning.keyId=${{secrets.NEXUS_GPG_SIGNING_KEY_ID}} -Psigning.password=${{ secrets.NEXUS_GPG_SECRET_KEY_PASSWORD }} -Psigning.secretKeyRingFile=$(echo ~/.gradle/secring.gpg)
         env:
           NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
           NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
