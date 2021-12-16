@@ -75,8 +75,8 @@ public final class AnnotatedDIModule extends AbstractModule {
         return false;
     }
 
-    private void bindProxy(Class implementationClass, List<ImplementationData> implementationDatas) {
-        bind(implementationClass).toProvider(ProxyProviderFactory.getProvider(implementationClass, implementationDatas));
+    private void bindProxy(Class interfaceClass, List<ImplementationData> implementationDatas) {
+        bind(interfaceClass).toProvider(ProxyProviderFactory.getProvider(interfaceClass, implementationDatas));
         for (ImplementationData implementationData : implementationDatas) {
             if (!implementationData.name().isEmpty()) {
                 bindImplementationData(implementationData);
