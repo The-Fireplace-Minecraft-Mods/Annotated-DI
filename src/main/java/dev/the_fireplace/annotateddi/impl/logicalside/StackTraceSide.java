@@ -16,11 +16,17 @@ public final class StackTraceSide
         "net.minecraft.client.main.Main",
         "net.minecraft.client.MinecraftClient",
         "net.minecraft.class_310",
-        "dxo"
+        "dxo",
+        "net.minecraft.client.network.ClientPlayNetworkHandler",
+        "net.minecraft.class_634",
+        "elm"
     );
     private static final Set<String> serverNames = Sets.newHashSet(
         "net.minecraft.server.Main",
-        "net.minecraft.server.MinecraftServer"
+        "net.minecraft.server.MinecraftServer",
+        "net.minecraft.server.network.ServerPlayNetworkHandler",
+        "net.minecraft.class_3244",
+        "aea"
     );
 
     @Nullable
