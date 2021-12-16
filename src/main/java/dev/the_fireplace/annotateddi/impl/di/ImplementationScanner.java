@@ -122,7 +122,7 @@ public class ImplementationScanner
                 interfaces.add(stringToClass(interfaceName.getAsString()));
             }
             Class implementationClass = stringToClass(implementationObj.get("class").getAsString());
-            implementationDatas.computeIfAbsent(implementationClass, c -> new ArrayList<>()).add(new AnnotatedDIModule.ImplementationData(
+            AnnotatedDIModule.ImplementationData implementationData = new AnnotatedDIModule.ImplementationData(
                 implementationClass,
                 interfaces,
                 implementationObj.has("namedImplementation")
@@ -130,7 +130,10 @@ public class ImplementationScanner
                     : "",
                 implementationObj.has("useAllInterfaces") && implementationObj.get("useAllInterfaces").getAsBoolean(),
                 implementationObj.has("environment") ? EnvType.valueOf(implementationObj.get("environment").getAsString()) : null
-            ));
+            );
+            for (Class interfaceClass : interfaces) {
+                implementationDatas.computeIfAbsent(interfaceClass, c -> new ArrayList<>()).add(implementationData);
+            }
         }
 
         return new AnnotatedDIModule.ImplementationContainer(jsonObject.get("version").getAsString(), implementationDatas);
