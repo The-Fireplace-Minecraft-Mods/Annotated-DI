@@ -24,9 +24,18 @@ public final class StackTraceSide
     private static final Set<String> serverNames = Sets.newHashSet(
         "net.minecraft.server.Main",
         "net.minecraft.server.MinecraftServer",
+        "net.minecraft.server.integrated.IntegratedServer",
+        "net.minecraft.class_1132",
+        "fcv",
         "net.minecraft.server.network.ServerPlayNetworkHandler",
         "net.minecraft.class_3244",
-        "aea"
+        "aea",
+        "net.minecraft.server.world.ThreadedAnvilChunkStorage",
+        "net.minecraft.class_3898",
+        "acv",
+        "net.minecraft.server.world.ChunkTaskPrioritySystem",
+        "net.minecraft.class_3900",
+        "acx"
     );
 
     @Nullable
