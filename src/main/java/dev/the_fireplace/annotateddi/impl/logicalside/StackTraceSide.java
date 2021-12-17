@@ -1,43 +1,17 @@
 package dev.the_fireplace.annotateddi.impl.logicalside;
 
-import com.google.common.collect.Sets;
 import dev.the_fireplace.annotateddi.impl.AnnotatedDI;
 import dev.the_fireplace.annotateddi.impl.logicalside.thread.ClientThread;
 import dev.the_fireplace.annotateddi.impl.logicalside.thread.ServerThread;
 import net.fabricmc.api.EnvType;
+import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.MappingResolver;
 
 import javax.annotation.Nullable;
 import java.util.Set;
 
 public final class StackTraceSide
 {
-    //TODO Any more names to add? Netty? Worldgen? Intermediary names from prod?
-    private static final Set<String> clientNames = Sets.newHashSet(
-        "net.minecraft.client.main.Main",
-        "net.minecraft.client.MinecraftClient",
-        "net.minecraft.class_310",
-        "dxo",
-        "net.minecraft.client.network.ClientPlayNetworkHandler",
-        "net.minecraft.class_634",
-        "elm"
-    );
-    private static final Set<String> serverNames = Sets.newHashSet(
-        "net.minecraft.server.Main",
-        "net.minecraft.server.MinecraftServer",
-        "net.minecraft.server.integrated.IntegratedServer",
-        "net.minecraft.class_1132",
-        "fcv",
-        "net.minecraft.server.network.ServerPlayNetworkHandler",
-        "net.minecraft.class_3244",
-        "aea",
-        "net.minecraft.server.world.ThreadedAnvilChunkStorage",
-        "net.minecraft.class_3898",
-        "acv",
-        "net.minecraft.server.world.ChunkTaskPrioritySystem",
-        "net.minecraft.class_3900",
-        "acx"
-    );
-
     @Nullable
     public static EnvType get() {
         Thread currentThread = Thread.currentThread();
@@ -47,6 +21,8 @@ public final class StackTraceSide
         if (currentThread instanceof ClientThread) {
             return EnvType.CLIENT;
         }
+        Set<String> clientNames = getClientNames();
+        Set<String> serverNames = getServerNames();
         StackTraceElement[] stacktrace = currentThread.getStackTrace();
         for (StackTraceElement element : stacktrace) {
             String className = element.getClassName();
@@ -60,5 +36,26 @@ public final class StackTraceSide
 
         AnnotatedDI.getLogger().warn("Thread side not found.", new Throwable("Stack Trace"));
         return null;
+    }
+
+    private static Set<String> getClientNames() {
+        MappingResolver mappingResolver = FabricLoader.getInstance().getMappingResolver();
+        return Set.of(
+            mappingResolver.mapClassName("named", "net.minecraft.client.main.Main"),
+            mappingResolver.mapClassName("named", "net.minecraft.client.MinecraftClient"),
+            mappingResolver.mapClassName("named", "net.minecraft.client.network.ClientPlayNetworkHandler")
+        );
+    }
+
+    private static Set<String> getServerNames() {
+        MappingResolver mappingResolver = FabricLoader.getInstance().getMappingResolver();
+        return Set.of(
+            mappingResolver.mapClassName("named", "net.minecraft.server.Main"),
+            mappingResolver.mapClassName("named", "net.minecraft.server.MinecraftServer"),
+            mappingResolver.mapClassName("named", "net.minecraft.server.integrated.IntegratedServer"),
+            mappingResolver.mapClassName("named", "net.minecraft.server.network.ServerPlayNetworkHandler"),
+            mappingResolver.mapClassName("named", "net.minecraft.server.world.ThreadedAnvilChunkStorage"),
+            mappingResolver.mapClassName("named", "net.minecraft.server.world.ChunkTaskPrioritySystem")
+        );
     }
 }
