@@ -1,6 +1,7 @@
 package dev.the_fireplace.annotateddi.impl.di;
 
-public class ImplementationException extends IllegalStateException {
+public class ImplementationException extends IllegalStateException
+{
     public ImplementationException() {
         super();
     }

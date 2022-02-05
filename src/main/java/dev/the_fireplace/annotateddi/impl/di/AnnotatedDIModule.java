@@ -11,7 +11,8 @@ import java.util.Map;
 import java.util.Set;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
-public final class AnnotatedDIModule extends AbstractModule {
+public final class AnnotatedDIModule extends AbstractModule
+{
 
     @Override
     protected void configure() {
