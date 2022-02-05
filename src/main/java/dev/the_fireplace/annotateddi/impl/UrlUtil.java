@@ -9,7 +9,8 @@ import java.net.URLConnection;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class UrlUtil {
+public class UrlUtil
+{
     public static URL getSource(String filename, URL resourceURL) throws Exception {
         URL codeSourceURL;
 

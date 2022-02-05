@@ -1,4 +1,4 @@
-package dev.the_fireplace.annotateddi.impl;
+package dev.the_fireplace.annotateddi.impl.entrypoint;
 
 import com.google.inject.Injector;
 import dev.the_fireplace.annotateddi.api.DIContainer;
@@ -9,7 +9,8 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.loader.api.FabricLoader;
 
 @Environment(EnvType.SERVER)
-public final class AnnotatedDIServer implements DedicatedServerModInitializer {
+public final class Server implements DedicatedServerModInitializer
+{
     @Override
     public void onInitializeServer() {
         Injector container = DIContainer.get();
