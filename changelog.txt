@@ -1,2 +1,4 @@
 Add ability to be implementation for all implemented interfaces without explicitly declaring them.
 Update bundled Guice version to 5.1.0 for improved Java 17 support
+Add Modrinth link to mod metadata for integration with Notify
+Make the mod's description in Mod Menu translatable.
