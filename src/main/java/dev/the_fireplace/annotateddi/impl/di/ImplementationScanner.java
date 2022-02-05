@@ -94,8 +94,9 @@ public class ImplementationScanner
     private AnnotatedDIModule.ImplementationContainer readImplementationContainerFromPath(Path path) {
         AnnotatedDIModule.ImplementationContainer implementationContainer = null;
 
+        JsonParser jsonParser = new JsonParser();
         try (BufferedReader br = new BufferedReader(new InputStreamReader(Files.newInputStream(path), StandardCharsets.UTF_8))) {
-            JsonElement jsonElement = JsonParser.parseReader(br);
+            JsonElement jsonElement = jsonParser.parse(br);
             if (jsonElement instanceof JsonObject jsonObject) {
                 implementationContainer = readImplementationContainerJson(jsonObject);
             }
