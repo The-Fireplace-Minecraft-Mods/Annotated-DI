@@ -2,40 +2,21 @@ package dev.the_fireplace.annotateddi.impl.di;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
-import dev.the_fireplace.annotateddi.api.injectable.LogicalSideChecker;
-import dev.the_fireplace.annotateddi.api.injectable.LogicalSidedThreadFactory;
-import dev.the_fireplace.annotateddi.impl.logicalside.ClientLogicalSideChecker;
-import dev.the_fireplace.annotateddi.impl.logicalside.DedicatedLogicalSide;
-import dev.the_fireplace.annotateddi.impl.logicalside.LogicalSidedThreadFactoryImpl;
-import dev.the_fireplace.annotateddi.impl.logicalside.StackTraceSide;
 import net.fabricmc.api.EnvType;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public final class AnnotatedDIModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bindLogicalSideChecker();
-        bind(LogicalSidedThreadFactory.class).to(LogicalSidedThreadFactoryImpl.class);
-
         Set<ImplementationContainer> implementations = new ImplementationScanner().findImplementations();
         bindImplementations(implementations);
-    }
-
-    private void bindLogicalSideChecker() {
-        Class<? extends LogicalSideChecker> logicalSideChecker;
-        EnvType currentSide = StackTraceSide.get();
-        if (Objects.equals(currentSide, EnvType.SERVER)) {
-            logicalSideChecker = DedicatedLogicalSide.class;
-        } else if (Objects.equals(currentSide, EnvType.CLIENT)) {
-            logicalSideChecker = ClientLogicalSideChecker.class;
-        } else {
-            throw new IllegalStateException("Cannot bind logical side checker from unknown side!");
-        }
-        bind(LogicalSideChecker.class).to(logicalSideChecker);
     }
 
     private void bindImplementations(Iterable<ImplementationContainer> modImplementations) {
@@ -44,42 +25,11 @@ public final class AnnotatedDIModule extends AbstractModule {
                 if (classImplementations.getValue().size() == 1) {
                     ImplementationData implementationData = classImplementations.getValue().get(0);
                     bindImplementationData(implementationData);
-                } else if (canUseProxy(classImplementations.getValue())) {
-                    bindProxy(classImplementations.getKey(), classImplementations.getValue());
                 } else {
                     for (ImplementationData implementationData : classImplementations.getValue()) {
                         bindImplementationData(implementationData);
                     }
                 }
-            }
-        }
-    }
-
-    private boolean canUseProxy(List<ImplementationData> implementationDatas) {
-        boolean hasSide = false;
-        boolean hasStandard = false;
-        for (ImplementationData data : implementationDatas) {
-            if (!data.name().isEmpty()) {
-                continue;
-            }
-            if (data.environment != null) {
-                hasSide = true;
-            } else {
-                hasStandard = true;
-            }
-            if (hasSide && hasStandard) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private void bindProxy(Class interfaceClass, List<ImplementationData> implementationDatas) {
-        bind(interfaceClass).toProvider(ProxyProviderFactory.getProvider(interfaceClass, implementationDatas));
-        for (ImplementationData implementationData : implementationDatas) {
-            if (!implementationData.name().isEmpty()) {
-                bindImplementationData(implementationData);
             }
         }
     }
