@@ -5,6 +5,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import dev.the_fireplace.annotateddi.api.entrypoints.DIModuleCreator;
+import dev.the_fireplace.annotateddi.impl.di.AnnotatedDIModule;
 import net.fabricmc.loader.api.FabricLoader;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
@@ -30,5 +31,10 @@ public final class AnnotatedDIConstants
         }
 
         return injector;
+    }
+
+    private static class ModuleContainer
+    {
+        private AbstractModule[] modules = new AbstractModule[]{new AnnotatedDIModule()};
     }
 }

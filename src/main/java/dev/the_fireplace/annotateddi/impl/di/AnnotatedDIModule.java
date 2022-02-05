@@ -13,7 +13,6 @@ import java.util.Set;
 @SuppressWarnings({"rawtypes", "unchecked"})
 public final class AnnotatedDIModule extends AbstractModule
 {
-
     @Override
     protected void configure() {
         Set<ImplementationContainer> implementations = new ImplementationScanner().findImplementations();
@@ -78,10 +77,6 @@ public final class AnnotatedDIModule extends AbstractModule
         }
     }
 
-    private Class stringToClass(String className) throws ClassNotFoundException {
-        return Class.forName(className);
-    }
-
     public static class ImplementationContainer {
         public final String version;
         public final Map<Class, List<ImplementationData>> implementations;
@@ -91,12 +86,15 @@ public final class AnnotatedDIModule extends AbstractModule
             this.implementations = implementations;
         }
     }
-    public static class ImplementationData {
+
+    public static class ImplementationData
+    {
         public final Class implementation;
         public final List<Class> interfaces;
         public final String name;
         public final boolean useAllInterfaces;
-        public final @Nullable EnvType environment;
+        @Nullable
+        public final EnvType environment;
 
         public ImplementationData(
             Class implementation,

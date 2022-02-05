@@ -8,7 +8,6 @@ import net.fabricmc.loader.api.FabricLoader;
 
 public final class Main implements ModInitializer
 {
-
     @Override
     public void onInitialize() {
         Injector container = DIContainer.get();

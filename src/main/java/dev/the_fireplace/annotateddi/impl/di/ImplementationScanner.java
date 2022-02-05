@@ -34,7 +34,7 @@ public class ImplementationScanner
             AnnotatedDIConstants.getLogger().error("Exception when scanning for implementations!", e);
         }
 
-        return Set.of();
+        return new HashSet<>();
     }
 
     private Set<Path> getConfigFilePaths(Enumeration<URL> mods) {
@@ -97,7 +97,8 @@ public class ImplementationScanner
         JsonParser jsonParser = new JsonParser();
         try (BufferedReader br = new BufferedReader(new InputStreamReader(Files.newInputStream(path), StandardCharsets.UTF_8))) {
             JsonElement jsonElement = jsonParser.parse(br);
-            if (jsonElement instanceof JsonObject jsonObject) {
+            if (jsonElement instanceof JsonObject) {
+                JsonObject jsonObject = (JsonObject) jsonElement;
                 implementationContainer = readImplementationContainerJson(jsonObject);
             }
         } catch (IOException | JsonParseException | ClassNotFoundException e) {
