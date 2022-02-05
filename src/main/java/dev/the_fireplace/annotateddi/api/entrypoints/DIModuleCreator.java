@@ -4,6 +4,7 @@ import com.google.inject.AbstractModule;
 
 import java.util.Collection;
 
-public interface DIModuleCreator {
+public interface DIModuleCreator
+{
     Collection<AbstractModule> getModules();
 }

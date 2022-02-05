@@ -25,7 +25,8 @@ import java.util.stream.Collectors;
 @SupportedAnnotationTypes("dev.the_fireplace.annotateddi.api.di.Implementation")
 @SupportedSourceVersion(SourceVersion.RELEASE_16)
 @AutoService(Processor.class)
-public final class ImplementationProcessor extends AbstractProcessor {
+public final class ImplementationProcessor extends AbstractProcessor
+{
     private static final String VERSION = "${version}";
     private final Gson gson = new Gson();
 

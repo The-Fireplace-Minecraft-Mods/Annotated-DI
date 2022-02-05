@@ -1,7 +1,7 @@
 package dev.the_fireplace.annotateddi.impl.di;
 
 import com.google.gson.*;
-import dev.the_fireplace.annotateddi.impl.AnnotatedDI;
+import dev.the_fireplace.annotateddi.impl.AnnotatedDIConstants;
 import dev.the_fireplace.annotateddi.impl.UrlUtil;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
@@ -31,7 +31,7 @@ public class ImplementationScanner
 
             return getImplementationContainersFromConfigs(validConfigFilePaths);
         } catch (IOException e) {
-            AnnotatedDI.getLogger().error("Exception when scanning for implementations!", e);
+            AnnotatedDIConstants.getLogger().error("Exception when scanning for implementations!", e);
         }
 
         return Set.of();
@@ -45,7 +45,7 @@ public class ImplementationScanner
             try {
                 url = UrlUtil.getSource(DI_CONFIG_FILE_NAME, mods.nextElement());
             } catch (Exception e) {
-                AnnotatedDI.getLogger().error("Error getting DI config's source!", e);
+                AnnotatedDIConstants.getLogger().error("Error getting DI config's source!", e);
                 continue;
             }
             Path normalizedPath, configJsonPath;
@@ -63,10 +63,10 @@ public class ImplementationScanner
                     FileSystemUtil.FileSystemDelegate jarFs = FileSystemUtil.getJarFileSystem(normalizedPath, false);
                     configJsonPath = jarFs.get().getPath(DI_CONFIG_FILE_NAME);
                 } catch (IOException e) {
-                    AnnotatedDI.getLogger().error("Failed to open JAR at " + normalizedPath + "!", e);
+                    AnnotatedDIConstants.getLogger().error("Failed to open JAR at " + normalizedPath + "!", e);
                     continue;
                 } catch (ZipError e) {
-                    AnnotatedDI.getLogger().error("Jar at " + normalizedPath + " is corrupted!", e);
+                    AnnotatedDIConstants.getLogger().error("Jar at " + normalizedPath + " is corrupted!", e);
                     continue;
                 }
             }
@@ -101,7 +101,7 @@ public class ImplementationScanner
                 implementationContainer = readImplementationContainerJson(jsonObject);
             }
         } catch (IOException | JsonParseException | ClassNotFoundException e) {
-            AnnotatedDI.getLogger().error("Exception when reading implementation file!", e);
+            AnnotatedDIConstants.getLogger().error("Exception when reading implementation file!", e);
         }
 
         return implementationContainer;
