@@ -1,4 +1,3 @@
-Add ability to be implementation for all implemented interfaces without explicitly declaring them.
-Update bundled Guice version to 5.1.0 for improved Java 17 support
-Add Modrinth link to mod metadata for integration with Notify
-Make the mod's description in Mod Menu translatable.
+Implementation annotation now accepts a string for Environment and uses annotation checking as the fallback.
+Implementation annotation now accepts a list of mod ids this implementation depends on - will help with classloading issues for soft dependencies.
+[Fabric] The description in Mod Menu can now be translated.
