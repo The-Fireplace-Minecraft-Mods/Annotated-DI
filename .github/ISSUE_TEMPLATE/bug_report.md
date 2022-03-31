@@ -23,4 +23,9 @@ Providing logs can be helpful in solving issues. If you crashed, you _must_ prov
 **Versions (please complete the following information, do *NOT* say "latest"):**
  - Minecraft: [e.g. 1.16.2]
  - Mod Version: [e.g. 2.0.0]
- - Fabric API: [e.g. Fabric API 0.19.0 build 398]
+ - Dependency Versions (whichever are applicable):
+   - Forge Version: [e.g. Forge 1.16.2.1234]
+   - Fabric Loader Version: [e.g. Fabric Loader 0.14.6]
+   - Fabric API Version: [e.g. Fabric API 0.53.4]
+   - Quilt Loader Version: [e.g. Quilt Loader 0.4.2]
+   - Quilt Standard Library Version: [e.g. QSL 1.1.0-beta.8]

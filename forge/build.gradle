@@ -1,0 +1,254 @@
+//file:noinspection GroovyAssignabilityCheck
+buildscript {
+    repositories {
+        maven { url = 'https://maven.minecraftforge.net' }
+        mavenCentral()
+    }
+    dependencies {
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
+    }
+}
+plugins {
+    id 'java'
+    id 'java-library'
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
+    // Mod Hosting Publish
+    id 'com.matthewprenger.cursegradle' version '1.4.0'
+    id 'com.modrinth.minotaur' version '1.1.0'
+}
+apply plugin: 'net.minecraftforge.gradle'
+
+archivesBaseName = "${archives_base_name}-Forge"
+def mainArtifactFile = new File(new File(buildDir, 'libs'), "$archivesBaseName-${version}.jar")
+def changelogFile = file('../changelog.txt')
+
+configurations {
+    shade
+    api.extendsFrom shade
+}
+
+minecraft.runs.all {
+    lazyToken('minecraft_classpath') {
+        configurations.shade.copyRecursive().resolve().collect { it.absolutePath }.join(File.pathSeparator)
+    }
+}
+
+dependencies {
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+
+    implementation 'com.google.code.findbugs:jsr305:3.0.2'
+
+    def guiceDependency = "com.google.inject:guice:${project.guice_version}"
+    shade(guiceDependency) {
+        exclude(group: 'com.google.guava')
+    }
+    shade 'javax.inject:javax.inject:1'
+    shade 'aopalliance:aopalliance:1.0'
+
+    compileOnly project(":common")
+    annotationProcessor project(':processor-forge')
+}
+
+shadowJar {
+    archiveClassifier.set('')
+    configurations = [project.configurations.shade]
+
+    finalizedBy 'reobfShadowJar'
+}
+
+minecraft {
+    mappings channel: 'official', version: minecraft_version
+
+    runs {
+        client {
+            workingDirectory project.file('run')
+            ideaModule "${rootProject.name}.${project.name}.main"
+            taskName 'Client'
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+            mods {
+                modClientRun {
+                    source sourceSets.main
+                    source project(":common").sourceSets.main
+                }
+            }
+        }
+
+        server {
+            workingDirectory project.file('run')
+            ideaModule "${rootProject.name}.${project.name}.main"
+            taskName 'Server'
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+            mods {
+                modServerRun {
+                    source sourceSets.main
+                    source project(":common").sourceSets.main
+                }
+            }
+        }
+    }
+}
+
+sourceSets.main.resources.srcDir 'src/generated/resources'
+
+tasks.withType(JavaCompile) {
+    source(project(":common").sourceSets.main.allSource)
+}
+
+processResources {
+    from project(":common").sourceSets.main.resources
+    def buildProps = project.properties.clone()
+
+    filesMatching(['**/*.json', 'pack.mcmeta', '**/mods.toml']) {
+        expand buildProps
+    }
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    archiveClassifier.set('sources')
+    from project(':common').sourceSets.main.allSource
+    from sourceSets.main.allSource
+}
+
+javadoc {
+    source project(':common').sourceSets.main.allJava
+    source sourceSets.main.allJava
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
+jar.finalizedBy('reobfJar')
+
+artifacts {
+    shadowJar
+}
+
+reobf {
+    shadowJar {}
+}
+
+jar {
+    archiveClassifier.set('slim')
+}
+
+if (hasProperty('curseForgeApiKey')) {
+    curseforge {
+        apiKey = curseForgeApiKey
+        project {
+            id = '605980'
+            changelog = changelogFile
+            releaseType = project.release_type
+            addGameVersion project.minecraft_version
+            addGameVersion '1.17'
+            addGameVersion 'Java 16'
+            addGameVersion 'Forge'
+            mainArtifact(mainArtifactFile) {
+                displayName = "$archivesBaseName-$version"
+            }
+        }
+        options {
+            javaIntegration = false
+            forgeGradleIntegration = false
+        }
+    }
+}
+
+import com.modrinth.minotaur.TaskModrinthUpload
+
+if (hasProperty('modrinthApiKey')) {
+    task publishModrinth(type: TaskModrinthUpload) {
+        token = modrinthApiKey
+        projectId = 'RAXqYPH1'
+        versionNumber = version
+        versionName = project.mod_version
+        uploadFile = mainArtifactFile
+        changelog = changelogFile.getText()
+        releaseType = project.release_type
+        addGameVersion(project.minecraft_version as String)
+        addGameVersion('1.17')
+        addLoader('forge')
+    }
+}
+
+if (hasProperty('nexusUsername') || System.getenv("NEXUS_USERNAME") != null) {
+    publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                from components.java
+                groupId project.maven_group
+                artifactId project.archivesBaseName
+                version project.version
+                pom {
+                    name = project.readable_name
+                    packaging = 'jar'
+                    description = project.maven_description
+                    url = project.modrinth_url
+                    scm {
+                        connection = "scm:svn:${project.github_url}.git"
+                        developerConnection = "scm:svn:${project.github_url}.git"
+                        url = project.github_url
+                    }
+
+                    licenses {
+                        license {
+                            name = project.license_name
+                            url = project.license_url
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id = 'the_fireplace'
+                            name = 'The_Fireplace'
+                            email = 'git@the-fireplace.dev'
+                        }
+                    }
+                }
+                //Replace all deobf dependencies with normal jar references.
+                pom.withXml { xmlProvider ->
+                    def dependencies = asNode().dependencies
+                    def allDeps = dependencies.'*';
+
+                    allDeps.findAll {
+                        println it
+                    }
+
+                    // Remove forge deps
+                    allDeps.findAll() { el ->
+                        el.artifactId.text() == 'forge' && el.groupId.text() == 'net.minecraftforge'
+                    }.forEach() { el ->
+                        el.parent().remove(el)
+                    }
+                    //remove forgegradle's mapped suffix from versions & set as optional so anyone else doesn't inherit them
+                    allDeps.findAll() { el ->
+                        el.version.text().contains('_mapped_')
+                    }.each { el ->
+                        def version = el.version
+                        version.each {
+                            it.setValue(it.text().substring(0, it.text().indexOf('_mapped_')))
+                        }
+                    }
+                }
+            }
+        }
+        repositories {
+            maven {
+                def releasesRepoUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
+                def snapshotsRepoUrl = 'https://oss.sonatype.org/content/repositories/snapshots/'
+                url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+                credentials {
+                    username = findProperty('nexusUsername') ?: System.getenv("NEXUS_USERNAME")
+                    password = findProperty('nexusPassword') ?: System.getenv("NEXUS_PASSWORD")
+                }
+            }
+        }
+    }
+
+    signing {
+        sign publishing.publications.mavenJava
+    }
+}
