@@ -86,6 +86,7 @@ if (hasProperty('curseForgeApiKey')) {
             addGameVersion project.minecraft_version
             addGameVersion '1.15.1'
             addGameVersion '1.15'
+            addGameVersion '1.14.4'
             addGameVersion 'Java 8'
             addGameVersion 'Fabric'
             mainArtifact(mainArtifactFile) {
@@ -113,6 +114,7 @@ if (hasProperty('modrinthApiKey')) {
         addGameVersion(project.minecraft_version as String)
         addGameVersion('1.15.1')
         addGameVersion('1.15')
+        addGameVersion('1.14.4')
         addLoader('fabric')
         addLoader('quilt')
     }
