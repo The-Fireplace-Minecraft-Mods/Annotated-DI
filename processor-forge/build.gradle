@@ -22,6 +22,22 @@ task processMainSource(type: Sync) {
     into "$buildDir/src"
 }
 
+task sourcesJar(type: Jar, dependsOn: classes) {
+    archiveClassifier.set('sources')
+    from project(':processor').sourceSets.main.allSource
+    from sourceSets.main.allSource
+}
+
+javadoc {
+    source project(':processor').sourceSets.main.allJava
+    source sourceSets.main.allJava
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
 compileJava {
     source = processMainSource.outputs
 }
