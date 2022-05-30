@@ -27,7 +27,8 @@ public abstract class ImplementationScanner
 
         try (BufferedReader br = new BufferedReader(new InputStreamReader(Files.newInputStream(path), StandardCharsets.UTF_8))) {
             JsonElement jsonElement = new JsonParser().parse(br);
-            if (jsonElement instanceof JsonObject jsonObject) {
+            if (jsonElement instanceof JsonObject) {
+                JsonObject jsonObject = (JsonObject) jsonElement;
                 implementationContainer = readImplementationContainerJson(jsonObject);
                 AnnotatedDIConstants.getLogger().debug("Found valid DI config at " + path);
             }

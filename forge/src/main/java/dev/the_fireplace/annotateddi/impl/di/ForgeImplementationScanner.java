@@ -5,6 +5,9 @@ import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.fml.loading.moddiscovery.ModFileInfo;
+import net.minecraftforge.fml.packs.ResourcePackLoader;
+import net.minecraftforge.forgespi.language.IModFileInfo;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -16,23 +19,29 @@ public final class ForgeImplementationScanner extends ImplementationScanner
     @Override
     public Optional<Path> findModImplementationPath(String modId) {
         Optional<? extends ModContainer> modContainer = ModList.get().getModContainerById(modId);
-        if (modContainer.isEmpty()) {
+        if (!modContainer.isPresent()) {
             return Optional.empty();
         }
-        Path resource = modContainer.get().getModInfo().getOwningFile().getFile().findResource(DI_CONFIG_FILE_NAME);
-        if (Files.exists(resource)) {
-            return Optional.of(resource);
+        IModFileInfo modFileInfo = modContainer.get().getModInfo().getOwningFile();
+        if (modFileInfo instanceof ModFileInfo) {
+            Path resource = ((ModFileInfo)modFileInfo).getFile().findResource(DI_CONFIG_FILE_NAME);
+            if (Files.exists(resource)) {
+                return Optional.of(resource);
+            }
         }
         return Optional.empty();
     }
 
     @Override
     protected boolean isOnEnvironment(String environment) {
-        return switch (environment.toLowerCase(Locale.ROOT)) {
-            case "client" -> FMLEnvironment.dist.isClient();
-            case "server" -> FMLEnvironment.dist.isDedicatedServer();
-            default -> throw new IllegalStateException("Unknown environment: " + environment);
-        };
+        switch (environment.toLowerCase(Locale.ROOT)) {
+            case "client":
+                return FMLEnvironment.dist.isClient();
+            case "server":
+                return FMLEnvironment.dist.isDedicatedServer();
+            default:
+                throw new IllegalStateException("Unknown environment: " + environment);
+        }
     }
 
     @Override
