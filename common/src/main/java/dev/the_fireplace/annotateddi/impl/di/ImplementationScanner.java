@@ -2,7 +2,9 @@ package dev.the_fireplace.annotateddi.impl.di;
 
 import com.google.gson.*;
 import dev.the_fireplace.annotateddi.impl.AnnotatedDIConstants;
+import dev.the_fireplace.annotateddi.impl.domain.loader.LoaderHelper;
 
+import javax.inject.Inject;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -12,15 +14,17 @@ import java.nio.file.Path;
 import java.util.*;
 
 @SuppressWarnings("rawtypes")
-public abstract class ImplementationScanner
+public final class ImplementationScanner
 {
     public static final String DI_CONFIG_FILE_NAME = "annotated-di.json";
 
-    public abstract Optional<Path> findModImplementationPath(String modId);
+    private final LoaderHelper loaderHelper;
 
-    protected abstract boolean isOnEnvironment(String environment);
-
-    protected abstract boolean isModLoaded(String modId);
+    @Inject
+    public ImplementationScanner(LoaderHelper loaderHelper)
+    {
+        this.loaderHelper = loaderHelper;
+    }
 
     public Optional<ImplementationContainer> readImplementationContainerFromPath(Path path) {
         ImplementationContainer implementationContainer = null;
@@ -72,7 +76,7 @@ public abstract class ImplementationScanner
 
     private boolean isOnWrongEnvironment(JsonObject implementationObj) {
         return implementationObj.has("environment")
-            && !isOnEnvironment(implementationObj.get("environment").getAsString());
+            && !loaderHelper.isOnEnvironment(implementationObj.get("environment").getAsString());
     }
 
     private boolean isMissingDependencies(JsonObject implementationObj) {
@@ -84,7 +88,7 @@ public abstract class ImplementationScanner
             return false;
         }
         for (JsonElement dependencyModId : dependencyModIds) {
-            if (!isModLoaded(dependencyModId.getAsString())) {
+            if (!loaderHelper.isModLoaded(dependencyModId.getAsString())) {
                 return true;
             }
         }
