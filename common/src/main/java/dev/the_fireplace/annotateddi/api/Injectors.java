@@ -11,9 +11,4 @@ public interface Injectors
      * Gets an injector containing the given mod and its dependencies' injection configurations.
      */
     Injector getAutoInjector(String modid);
-
-    /**
-     * Gets an injector containing the given mods' injection configurations.
-     */
-    Injector getCustomInjector(String modid, String... otherModids);
 }
