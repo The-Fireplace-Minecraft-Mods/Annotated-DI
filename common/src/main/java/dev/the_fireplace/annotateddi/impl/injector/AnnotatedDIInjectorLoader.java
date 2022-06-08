@@ -4,7 +4,7 @@ import com.google.gson.*;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import dev.the_fireplace.annotateddi.impl.AnnotatedDIConstants;
-import dev.the_fireplace.annotateddi.impl.di.AnnotatedDIModule;
+import dev.the_fireplace.annotateddi.impl.di.AnnotatedDIConfigModule;
 import dev.the_fireplace.annotateddi.impl.di.ImplementationContainer;
 import dev.the_fireplace.annotateddi.impl.di.ImplementationData;
 import dev.the_fireplace.annotateddi.impl.io.FileSystemUtil;
@@ -28,7 +28,7 @@ import static dev.the_fireplace.annotateddi.impl.di.ImplementationScanner.DI_CON
 public final class AnnotatedDIInjectorLoader
 {
     public static Injector loadAnnotatedDIInjector() {
-        return Guice.createInjector(new AnnotatedDIModule(new AnnotatedDIInjectorLoader().findImplementation()));
+        return Guice.createInjector(new AnnotatedDIConfigModule(new AnnotatedDIInjectorLoader().findImplementation()));
     }
 
     private ImplementationContainer findImplementation() {
