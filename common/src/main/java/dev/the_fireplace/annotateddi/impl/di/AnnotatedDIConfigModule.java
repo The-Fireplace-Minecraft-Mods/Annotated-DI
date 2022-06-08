@@ -6,11 +6,11 @@ import com.google.inject.name.Names;
 import java.util.*;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
-public final class AnnotatedDIModule extends AbstractModule
+public final class AnnotatedDIConfigModule extends AbstractModule
 {
     private final ImplementationContainer implementationContainer;
 
-    public AnnotatedDIModule(ImplementationContainer implementationContainer) {
+    public AnnotatedDIConfigModule(ImplementationContainer implementationContainer) {
         this.implementationContainer = implementationContainer;
     }
 

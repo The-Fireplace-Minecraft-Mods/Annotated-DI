@@ -20,6 +20,13 @@ dependencies {
     }
     api 'javax.inject:javax.inject:1'
     api 'aopalliance:aopalliance:1.0'
+
+    testImplementation "org.junit.jupiter:junit-jupiter-api:${project.junit_version}"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${project.junit_version}"
+}
+
+test {
+    useJUnitPlatform()
 }
 
 java {

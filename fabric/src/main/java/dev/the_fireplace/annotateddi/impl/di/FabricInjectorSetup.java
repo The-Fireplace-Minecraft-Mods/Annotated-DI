@@ -3,7 +3,8 @@ package dev.the_fireplace.annotateddi.impl.di;
 import dev.the_fireplace.annotateddi.api.Injectors;
 import dev.the_fireplace.annotateddi.api.entrypoints.DIModuleCreator;
 import dev.the_fireplace.annotateddi.impl.AnnotatedDIConstants;
-import dev.the_fireplace.annotateddi.impl.injector.InjectorFactory;
+import dev.the_fireplace.annotateddi.impl.domain.loader.ModInjectableData;
+import dev.the_fireplace.annotateddi.impl.injector.InjectorFactoryImpl;
 import net.fabricmc.loader.api.FabricLoader;
 
 public final class FabricInjectorSetup
@@ -17,7 +18,7 @@ public final class FabricInjectorSetup
         FabricLoader.getInstance().getEntrypointContainers("di-module", DIModuleCreator.class).forEach((entrypoint) -> {
             Injectors.INSTANCE
                 .getAutoInjector(AnnotatedDIConstants.MODID)
-                .getInstance(InjectorFactory.class)
+                .getInstance(ModInjectableData.class)
                 .addModules(entrypoint.getProvider().getMetadata().getId(), entrypoint.getEntrypoint().getModules());
         });
         hasInitialized = true;
