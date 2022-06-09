@@ -70,12 +70,14 @@ public final class ModInjectableDataImpl implements ModInjectableData
     @Override
     public Collection<AbstractModule> getModules(Collection<String> dependencyTreeNode) {
         Collection<AbstractModule> abstractModules = new HashSet<>();
-        for (String modId : dependencyTreeNode) {
-            if (modDefaultImplementationMap.containsKey(modId)) {
-                abstractModules.add(new AnnotatedDIConfigModule(modDefaultImplementationMap.get(modId)));
-            }
-            if (modCustomModules.containsKey(modId)) {
-                abstractModules.addAll(modCustomModules.get(modId));
+        if (isInjectable(dependencyTreeNode)) {
+            for (String modId : dependencyTreeNode) {
+                if (modDefaultImplementationMap.containsKey(modId)) {
+                    abstractModules.add(new AnnotatedDIConfigModule(modDefaultImplementationMap.get(modId)));
+                }
+                if (modCustomModules.containsKey(modId)) {
+                    abstractModules.addAll(modCustomModules.get(modId));
+                }
             }
         }
 
