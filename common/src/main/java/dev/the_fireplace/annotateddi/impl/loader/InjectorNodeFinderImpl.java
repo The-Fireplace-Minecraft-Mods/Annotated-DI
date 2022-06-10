@@ -1,5 +1,6 @@
 package dev.the_fireplace.annotateddi.impl.loader;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Singleton;
 import dev.the_fireplace.annotateddi.api.di.Implementation;
 import dev.the_fireplace.annotateddi.impl.domain.loader.InjectorNodeFinder;
@@ -33,7 +34,7 @@ public final class InjectorNodeFinderImpl implements InjectorNodeFinder
     private void buildTree() {
         populateAllParentMods();
         populateAllChildMods();
-        populateDependencyTree(Set.of(ROOT_MOD_ID), new HashSet<>());
+        populateDependencyTree(Sets.newHashSet(ROOT_MOD_ID), new HashSet<>());
         calculateImmediateParents();
     }
 
@@ -68,7 +69,7 @@ public final class InjectorNodeFinderImpl implements InjectorNodeFinder
             Collection<String> currentModDependencies = parentMods.getOrDefault(currentMod, Collections.emptySet());
             boolean branchMeetsImmediateDependencies = parentDependencies.containsAll(currentModDependencies);
             if (branchMeetsImmediateDependencies) {
-                Set<String> node = Set.of(currentMod);
+                Set<String> node = Sets.newHashSet(currentMod);
                 if (hasNoChildren) {
                     nodes.add(node);
                     dependencyTree.put(node, Collections.emptySet());
