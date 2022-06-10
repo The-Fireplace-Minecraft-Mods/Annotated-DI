@@ -163,6 +163,6 @@ public final class InjectorNodeFinderImpl implements InjectorNodeFinder
             }
         }
 
-        return Set.of(modId);
+        return Sets.newHashSet(modId);
     }
 }
