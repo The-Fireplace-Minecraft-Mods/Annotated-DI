@@ -147,7 +147,7 @@ public abstract class ImplementationProcessor extends AbstractProcessor
         JsonObject output = new JsonObject();
 
         output.addProperty("class", implementationElement.asType().toString());
-        if (!namedImplementationName.isBlank()) {
+        if (!namedImplementationName.isEmpty()) {
             output.addProperty("namedImplementation", namedImplementationName);
         }
         JsonArray interfacesJsonArray = new JsonArray();
@@ -187,7 +187,7 @@ public abstract class ImplementationProcessor extends AbstractProcessor
     }
 
     private List<String> getExplicitInterfaces(Implementation implAnnotation) {
-        return Arrays.stream(implAnnotation.value()).toList();
+        return Arrays.stream(implAnnotation.value()).collect(Collectors.toList());
     }
 
     private boolean usesImplicitInterface(Implementation implAnnotation) {
