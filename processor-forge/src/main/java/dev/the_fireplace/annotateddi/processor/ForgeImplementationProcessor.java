@@ -9,7 +9,7 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 
 @SupportedAnnotationTypes("dev.the_fireplace.annotateddi.api.di.Implementation")
-@SupportedSourceVersion(SourceVersion.RELEASE_16)
+@SupportedSourceVersion(SourceVersion.RELEASE_8)
 @AutoService(Processor.class)
 public final class ForgeImplementationProcessor extends ImplementationProcessor
 {

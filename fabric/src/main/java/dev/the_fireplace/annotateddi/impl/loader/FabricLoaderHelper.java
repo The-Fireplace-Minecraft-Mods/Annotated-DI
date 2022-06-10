@@ -32,7 +32,7 @@ public final class FabricLoaderHelper implements LoaderHelper
     @Override
     public Collection<String> getDependencies(String modId) {
         Optional<ModContainer> modContainer = FabricLoader.getInstance().getModContainer(modId);
-        if (modContainer.isEmpty()) {
+        if (!modContainer.isPresent()) {
             return Collections.emptySet();
         }
         return modContainer.get().getMetadata().getDependencies().stream()
@@ -53,7 +53,7 @@ public final class FabricLoaderHelper implements LoaderHelper
     @Override
     public Optional<Path> findDiConfigPath(String modId) {
         Optional<ModContainer> modContainer = FabricLoader.getInstance().getModContainer(modId);
-        if (modContainer.isEmpty()) {
+        if (!modContainer.isPresent()) {
             return Optional.empty();
         }
         Optional<Path> path = modContainer.get().findPath(DI_CONFIG_FILE_NAME);
@@ -61,7 +61,7 @@ public final class FabricLoaderHelper implements LoaderHelper
             return path;
         }
         Optional<Path> fabricModJsonPath = modContainer.get().findPath("fabric.mod.json");
-        if (fabricModJsonPath.isEmpty()
+        if (!fabricModJsonPath.isPresent()
             || fabricModJsonPath.get().getParent() == null
             || fabricModJsonPath.get().getParent().getParent() == null
             || fabricModJsonPath.get().getParent().getParent().getParent() == null
