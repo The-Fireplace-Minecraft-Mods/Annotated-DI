@@ -140,7 +140,7 @@ public final class InjectorNodeFinderImplTest
     public void test_getParent_isMinecraft_returnsNull() {
         // Arrange
         String modId = "minecraft";
-        loaderHelperStub.addMod(modId, Set.of());
+        loaderHelperStub.addMod(modId, Collections.emptySet());
 
         // Act
         Collection<String> actual = createInjectorNodeFinder().getParentNode(modId);
