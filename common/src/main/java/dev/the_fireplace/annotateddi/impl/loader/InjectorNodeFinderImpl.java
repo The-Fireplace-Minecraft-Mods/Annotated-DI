@@ -20,6 +20,7 @@ public final class InjectorNodeFinderImpl implements InjectorNodeFinder
     private final Map<String, Collection<String>> parentMods;
     private final Map<Collection<String>, Collection<Collection<String>>> dependencyTree;
     private final Map<String, Collection<String>> childParentNodes;
+    private final Collection<String> loadedMods;
 
     @Inject
     public InjectorNodeFinderImpl(LoaderHelper loaderHelper) {
@@ -28,6 +29,7 @@ public final class InjectorNodeFinderImpl implements InjectorNodeFinder
         parentMods = new HashMap<>(5);
         dependencyTree = new HashMap<>(5);
         childParentNodes = new HashMap<>(5);
+        loadedMods = loaderHelper.getLoadedMods();
         buildTree();
     }
 
@@ -115,7 +117,7 @@ public final class InjectorNodeFinderImpl implements InjectorNodeFinder
     }
 
     private void populateAllParentMods() {
-        for (String modId : loaderHelper.getLoadedMods()) {
+        for (String modId : loadedMods) {
             getParents(modId);
         }
     }
@@ -127,8 +129,10 @@ public final class InjectorNodeFinderImpl implements InjectorNodeFinder
         Collection<String> parents = this.parentMods.computeIfAbsent(modId, k -> new HashSet<>());
         Collection<String> immediateParents = loaderHelper.getDependencies(modId);
         for (String parent : immediateParents) {
-            parents.add(parent);
-            parents.addAll(getParents(parent));
+            if (loadedMods.contains(parent)) {
+                parents.add(parent);
+                parents.addAll(getParents(parent));
+            }
         }
         if (!this.parentMods.get(modId).contains(ROOT_MOD_ID) && !modId.equals(ROOT_MOD_ID)) {
             this.parentMods.get(modId).add(ROOT_MOD_ID);
@@ -138,7 +142,7 @@ public final class InjectorNodeFinderImpl implements InjectorNodeFinder
     }
 
     private void populateAllChildMods() {
-        for (String modId : loaderHelper.getLoadedMods()) {
+        for (String modId : loadedMods) {
             for (String parent : getParents(modId)) {
                 this.childMods.computeIfAbsent(parent, k -> new HashSet<>()).add(modId);
             }

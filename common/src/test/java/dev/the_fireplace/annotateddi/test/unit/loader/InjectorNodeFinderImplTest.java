@@ -201,4 +201,26 @@ public final class InjectorNodeFinderImplTest
         assertEquals(1, actual.size());
         assertTrue(actual.contains(modId2));
     }
+
+    @Test
+    public void test_getParent_missingSoftDependency_returnsParentNode() {
+        // Arrange
+        String modId = "testmod";
+        String missingModId = "some soft dependency";
+        String modId2 = "testmod2";
+        String modId3 = "testmod3";
+        String modId4 = "testmod4";
+        loaderHelperStub.addMod(modId, Collections.emptySet());
+        loaderHelperStub.addMod(modId2, Sets.newHashSet(modId, missingModId));
+        loaderHelperStub.addMod(modId3, Sets.newHashSet(modId2));
+        loaderHelperStub.addMod(modId4, Sets.newHashSet(modId3));
+
+        // Act
+        Collection<String> actual = createInjectorNodeFinder().getParentNode(modId3);
+
+        // Assert
+        assertNotNull(actual);
+        assertEquals(1, actual.size());
+        assertTrue(actual.contains(modId2));
+    }
 }
