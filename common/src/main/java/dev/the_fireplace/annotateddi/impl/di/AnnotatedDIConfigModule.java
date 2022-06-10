@@ -1,5 +1,6 @@
 package dev.the_fireplace.annotateddi.impl.di;
 
+import com.google.common.collect.Lists;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 
@@ -51,7 +52,7 @@ public final class AnnotatedDIConfigModule extends AbstractModule
                 bindWithOptionalName(interfaces[0], implementation, name);
             } else if (interfaces.length > 1) {
                 if (useAllInterfaces) {
-                    bindToInterfaces(implementation, List.of(interfaces), name);
+                    bindToInterfaces(implementation, Lists.newArrayList(interfaces), name);
                 } else {
                     throw new ImplementationException(String.format("Multiple interfaces found for @Implementation annotated class %s, please set the value(s) to pick the correct one(s).", implementation.getCanonicalName()));
                 }
@@ -68,7 +69,7 @@ public final class AnnotatedDIConfigModule extends AbstractModule
     }
 
     private void bindWithOptionalName(Class injectableInterface, Class implementation, String name) {
-        if (name.isBlank()) {
+        if (name.isEmpty()) {
             bind(injectableInterface).to(implementation);
         } else {
             bind(injectableInterface).annotatedWith(Names.named(name)).to(implementation);
