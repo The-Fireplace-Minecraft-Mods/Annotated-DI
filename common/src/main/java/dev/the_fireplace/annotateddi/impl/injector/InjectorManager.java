@@ -15,7 +15,7 @@ public final class InjectorManager implements Injectors
     private final Map<String, Injector> injectorCache = new ConcurrentHashMap<>();
 
     @Override
-    public Injector getAutoInjector(String modId) {
+    public synchronized Injector getAutoInjector(String modId) {
         if (injectorCache.containsKey(modId)) {
             return injectorCache.get(modId);
         }
