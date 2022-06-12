@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class InjectorManager implements Injectors
 {
-    private final Map<String, Injector> injectorCache = new ConcurrentHashMap<>();
+    private final Map<String, Injector> injectorCache = new HashMap<>();
 
     @Override
     public synchronized Injector getAutoInjector(String modId) {
