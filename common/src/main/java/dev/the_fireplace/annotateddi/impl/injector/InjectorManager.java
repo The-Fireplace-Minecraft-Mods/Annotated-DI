@@ -7,8 +7,8 @@ import dev.the_fireplace.annotateddi.impl.domain.injector.InjectorFactory;
 import dev.the_fireplace.annotateddi.impl.domain.loader.InjectorNodeFinder;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public final class InjectorManager implements Injectors
 {
