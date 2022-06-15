@@ -70,57 +70,63 @@ public final class InjectorNodeFinderImpl implements InjectorNodeFinder
         Collection<Collection<String>> nodes = new HashSet<>();
 
         for (String currentMod : possibleChildren) {
-            if (parentNode.contains(currentMod)) {
-                continue;
-            }
-            Collection<String> currentModAllChildren = childMods.getOrDefault(currentMod, Collections.emptySet());
-            boolean hasNoChildren = currentModAllChildren.isEmpty();
-            Collection<String> currentModDependencies = parentMods.getOrDefault(currentMod, Collections.emptySet());
-            boolean branchMeetsImmediateDependencies = parentDependencies.containsAll(currentModDependencies);
-            if (branchMeetsImmediateDependencies) {
-                Set<String> node = Sets.newHashSet(currentMod);
-                if (hasNoChildren) {
-                    nodes.add(node);
-                    dependencyTree.put(node, Collections.emptySet());
-                    continue;
-                }
-                Collection<String> nodeDependencies = new HashSet<>();
-                for (String nodeChild : currentModAllChildren) {
-                    nodeDependencies.addAll(parentMods.getOrDefault(nodeChild, Collections.emptySet()));
-                }
-                Collection<String> branchSelfContainedDependencies = new HashSet<>(parentDependencies);
-                branchSelfContainedDependencies.addAll(currentModAllChildren);
-                branchSelfContainedDependencies.add(currentMod);
-                if (branchSelfContainedDependencies.containsAll(nodeDependencies)) {
-                    nodes.add(node);
-                    populateDependencyTree(node, parentDependencies);
-                }
-                continue;
-            }
-            if (hasNoChildren) {
-                continue;
-            }
-            Collection<String> unfulfilledDependencies = new HashSet<>(currentModDependencies);
-            unfulfilledDependencies.removeAll(parentDependencies);
-            boolean isCodependent = currentModAllChildren.containsAll(unfulfilledDependencies);
-            if (isCodependent) {
-                Set<String> node = new HashSet<>(unfulfilledDependencies);
-                node.add(currentMod);
-                Collection<String> nodeDependencies = new HashSet<>();
-                for (String nodeChild : currentModAllChildren) {
-                    nodeDependencies.addAll(parentMods.getOrDefault(nodeChild, Collections.emptySet()));
-                }
-                Collection<String> branchSelfContainedDependencies = new HashSet<>(parentDependencies);
-                branchSelfContainedDependencies.addAll(currentModAllChildren);
-                branchSelfContainedDependencies.add(currentMod);
-                if (branchSelfContainedDependencies.containsAll(nodeDependencies)) {
-                    nodes.add(node);
-                    populateDependencyTree(node, parentDependencies);
-                }
-            }
+            getNodeIfAttachable(parentNode, parentDependencies, currentMod)
+                .ifPresent(nodes::add);
         }
 
         dependencyTree.put(parentNode, nodes);
+    }
+
+    private Optional<Collection<String>> getNodeIfAttachable(Collection<String> parentNode, Collection<String> parentDependencies, String currentMod) {
+        if (parentNode.contains(currentMod)) {
+            return Optional.empty();
+        }
+        Collection<String> currentModAllChildren = childMods.getOrDefault(currentMod, Collections.emptySet());
+        boolean hasNoChildren = currentModAllChildren.isEmpty();
+        Collection<String> currentModDependencies = parentMods.getOrDefault(currentMod, Collections.emptySet());
+        boolean branchMeetsImmediateDependencies = parentDependencies.containsAll(currentModDependencies);
+        if (branchMeetsImmediateDependencies) {
+            Set<String> node = Sets.newHashSet(currentMod);
+            if (hasNoChildren) {
+                dependencyTree.put(node, Collections.emptySet());
+                return Optional.of(node);
+            }
+            Collection<String> nodeDependencies = new HashSet<>();
+            for (String nodeChild : currentModAllChildren) {
+                nodeDependencies.addAll(parentMods.getOrDefault(nodeChild, Collections.emptySet()));
+            }
+            Collection<String> branchSelfContainedDependencies = new HashSet<>(parentDependencies);
+            branchSelfContainedDependencies.addAll(currentModAllChildren);
+            branchSelfContainedDependencies.add(currentMod);
+            if (branchSelfContainedDependencies.containsAll(nodeDependencies)) {
+                populateDependencyTree(node, parentDependencies);
+                return Optional.of(node);
+            }
+            return Optional.empty();
+        }
+        if (hasNoChildren) {
+            return Optional.empty();
+        }
+        Collection<String> unfulfilledDependencies = new HashSet<>(currentModDependencies);
+        unfulfilledDependencies.removeAll(parentDependencies);
+        boolean isCodependent = currentModAllChildren.containsAll(unfulfilledDependencies);
+        if (isCodependent) {
+            Set<String> node = new HashSet<>(unfulfilledDependencies);
+            node.add(currentMod);
+            Collection<String> nodeDependencies = new HashSet<>();
+            for (String nodeChild : currentModAllChildren) {
+                nodeDependencies.addAll(parentMods.getOrDefault(nodeChild, Collections.emptySet()));
+            }
+            Collection<String> branchSelfContainedDependencies = new HashSet<>(parentDependencies);
+            branchSelfContainedDependencies.addAll(currentModAllChildren);
+            branchSelfContainedDependencies.add(currentMod);
+            if (branchSelfContainedDependencies.containsAll(nodeDependencies)) {
+                populateDependencyTree(node, parentDependencies);
+                return Optional.of(node);
+            }
+        }
+
+        return Optional.empty();
     }
 
     private void populateAllParentMods() {
