@@ -77,28 +77,22 @@ public final class InjectorNodeFinderImpl implements InjectorNodeFinder
         dependencyTree.put(parentNode, nodes);
     }
 
-    private Optional<Collection<String>> getNodeIfAttachable(Collection<String> parentNode, Collection<String> parentDependencies, String currentMod) {
-        if (parentNode.contains(currentMod)) {
+    private Optional<Collection<String>> getNodeIfAttachable(Collection<String> parentNode, Collection<String> parentDependencies, String evaluatingModId) {
+        if (parentNode.contains(evaluatingModId)) {
             return Optional.empty();
         }
-        Collection<String> currentModAllChildren = childMods.getOrDefault(currentMod, Collections.emptySet());
-        boolean hasNoChildren = currentModAllChildren.isEmpty();
-        Collection<String> currentModDependencies = parentMods.getOrDefault(currentMod, Collections.emptySet());
-        boolean branchMeetsImmediateDependencies = parentDependencies.containsAll(currentModDependencies);
+        Collection<String> evaluatingModAllChildren = childMods.getOrDefault(evaluatingModId, Collections.emptySet());
+        boolean hasNoChildren = evaluatingModAllChildren.isEmpty();
+        Collection<String> evaluatingModDependencies = parentMods.getOrDefault(evaluatingModId, Collections.emptySet());
+        boolean branchMeetsImmediateDependencies = parentDependencies.containsAll(evaluatingModDependencies);
         if (branchMeetsImmediateDependencies) {
-            Set<String> node = Sets.newHashSet(currentMod);
+            Set<String> node = Sets.newHashSet(evaluatingModId);
             if (hasNoChildren) {
                 dependencyTree.put(node, Collections.emptySet());
                 return Optional.of(node);
             }
-            Collection<String> nodeDependencies = new HashSet<>();
-            for (String nodeChild : currentModAllChildren) {
-                nodeDependencies.addAll(parentMods.getOrDefault(nodeChild, Collections.emptySet()));
-            }
-            Collection<String> branchSelfContainedDependencies = new HashSet<>(parentDependencies);
-            branchSelfContainedDependencies.addAll(currentModAllChildren);
-            branchSelfContainedDependencies.add(currentMod);
-            if (branchSelfContainedDependencies.containsAll(nodeDependencies)) {
+            boolean isSelfContainedBranch = isSelfContainedBranch(parentDependencies, evaluatingModId, evaluatingModAllChildren);
+            if (isSelfContainedBranch) {
                 populateDependencyTree(node, parentDependencies);
                 return Optional.of(node);
             }
@@ -107,26 +101,33 @@ public final class InjectorNodeFinderImpl implements InjectorNodeFinder
         if (hasNoChildren) {
             return Optional.empty();
         }
-        Collection<String> unfulfilledDependencies = new HashSet<>(currentModDependencies);
+        Collection<String> unfulfilledDependencies = new HashSet<>(evaluatingModDependencies);
         unfulfilledDependencies.removeAll(parentDependencies);
-        boolean isCodependent = currentModAllChildren.containsAll(unfulfilledDependencies);
+        boolean isCodependent = evaluatingModAllChildren.containsAll(unfulfilledDependencies);
         if (isCodependent) {
             Set<String> node = new HashSet<>(unfulfilledDependencies);
-            node.add(currentMod);
-            Collection<String> nodeDependencies = new HashSet<>();
-            for (String nodeChild : currentModAllChildren) {
-                nodeDependencies.addAll(parentMods.getOrDefault(nodeChild, Collections.emptySet()));
-            }
-            Collection<String> branchSelfContainedDependencies = new HashSet<>(parentDependencies);
-            branchSelfContainedDependencies.addAll(currentModAllChildren);
-            branchSelfContainedDependencies.add(currentMod);
-            if (branchSelfContainedDependencies.containsAll(nodeDependencies)) {
+            node.add(evaluatingModId);
+
+            boolean isSelfContainedBranch = isSelfContainedBranch(parentDependencies, evaluatingModId, evaluatingModAllChildren);
+            if (isSelfContainedBranch) {
                 populateDependencyTree(node, parentDependencies);
                 return Optional.of(node);
             }
         }
 
         return Optional.empty();
+    }
+
+    private boolean isSelfContainedBranch(Collection<String> parentDependencies, String evaluatingMod, Collection<String> evaluatingModAllChildren) {
+        Collection<String> nodeDependencies = new HashSet<>();
+        for (String nodeChild : evaluatingModAllChildren) {
+            nodeDependencies.addAll(parentMods.getOrDefault(nodeChild, Collections.emptySet()));
+        }
+        Collection<String> branchSelfContainedDependencies = new HashSet<>(parentDependencies);
+        branchSelfContainedDependencies.addAll(evaluatingModAllChildren);
+        branchSelfContainedDependencies.add(evaluatingMod);
+
+        return branchSelfContainedDependencies.containsAll(nodeDependencies);
     }
 
     private void populateAllParentMods() {
