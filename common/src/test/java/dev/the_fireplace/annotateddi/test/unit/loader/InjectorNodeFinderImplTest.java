@@ -221,4 +221,50 @@ public final class InjectorNodeFinderImplTest
         assertEquals(1, actual.size());
         assertTrue(actual.contains(modId2));
     }
+
+    @Test
+    public void test_getParent_multipleModsMissingCommonSoftDependency_returnsParentNode() {
+        // Arrange
+        String modId = "testmod";
+        String missingModId = "some soft dependency";
+        String modId2 = "testmod2";
+        String modId3 = "testmod3";
+        String modId4 = "testmod4";
+        loaderHelperStub.addMod(modId, Set.of());
+        loaderHelperStub.addMod(modId2, Set.of(modId, missingModId));
+        loaderHelperStub.addMod(modId3, Set.of(modId2, missingModId));
+        loaderHelperStub.addMod(modId4, Set.of(modId3));
+
+        // Act
+        Collection<String> actual = createInjectorNodeFinder().getParentNode(modId4);
+
+        // Assert
+        assertNotNull(actual);
+        assertEquals(1, actual.size());
+        assertTrue(actual.contains(modId3));
+    }
+
+    @Test
+    public void test_getParent_multipleModsMissingCommonSoftDependency_withDependencyLoop_returnsParentNode() {
+        // Arrange
+        String modId = "testmod";
+        String missingModId = "some soft dependency";
+        String modId2 = "testmod2";
+        String modId3 = "testmod3";
+        String modId4 = "testmod4";
+        loaderHelperStub.addMod(modId, Set.of(modId3));
+        loaderHelperStub.addMod(modId2, Set.of(modId, missingModId));
+        loaderHelperStub.addMod(modId3, Set.of(modId2, missingModId));
+        loaderHelperStub.addMod(modId4, Set.of(modId3));
+
+        // Act
+        Collection<String> actual = createInjectorNodeFinder().getParentNode(modId4);
+
+        // Assert
+        assertNotNull(actual);
+        assertEquals(3, actual.size());
+        assertTrue(actual.contains(modId));
+        assertTrue(actual.contains(modId2));
+        assertTrue(actual.contains(modId3));
+    }
 }
