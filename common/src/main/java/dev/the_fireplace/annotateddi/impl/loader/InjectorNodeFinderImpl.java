@@ -36,7 +36,11 @@ public final class InjectorNodeFinderImpl implements InjectorNodeFinder
     private void buildTree() {
         populateAllParentMods();
         populateAllChildMods();
-        populateDependencyTree(Sets.newHashSet(ROOT_MOD_ID), new HashSet<>());
+        Collection<String> rootNode = Sets.newHashSet(ROOT_MOD_ID);
+        if (this.loaderHelper.isModLoaded("java")) {
+            rootNode.add("java");
+        }
+        populateDependencyTree(rootNode, new HashSet<>());
         calculateImmediateParents();
     }
 
@@ -66,6 +70,9 @@ public final class InjectorNodeFinderImpl implements InjectorNodeFinder
         Collection<Collection<String>> nodes = new HashSet<>();
 
         for (String currentMod : possibleChildren) {
+            if (parentNode.contains(currentMod)) {
+                continue;
+            }
             Collection<String> currentModAllChildren = childMods.getOrDefault(currentMod, Collections.emptySet());
             boolean hasNoChildren = currentModAllChildren.isEmpty();
             Collection<String> currentModDependencies = parentMods.getOrDefault(currentMod, Collections.emptySet());
@@ -132,6 +139,7 @@ public final class InjectorNodeFinderImpl implements InjectorNodeFinder
             if (loadedMods.contains(parent)) {
                 parents.add(parent);
                 parents.addAll(getParents(parent));
+                parents.remove(modId);
             }
         }
         if (!this.parentMods.get(modId).contains(ROOT_MOD_ID) && !modId.equals(ROOT_MOD_ID)) {
