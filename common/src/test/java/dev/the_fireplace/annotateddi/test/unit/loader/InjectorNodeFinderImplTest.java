@@ -269,4 +269,24 @@ public final class InjectorNodeFinderImplTest
         assertTrue(actual.contains(modId2));
         assertTrue(actual.contains(modId3));
     }
+
+    @Test
+    public void test_getParent_nonChainedDependencies_returnsParentNode() {
+        // Arrange
+        String someRoot = "someRoot";
+        String branch1 = "branch1";
+        String branch2 = "branch2";
+        String commonLeaf = "commonLeaf";
+        loaderHelperStub.addMod(someRoot, Set.of());
+        loaderHelperStub.addMod(branch1, Set.of(someRoot));
+        loaderHelperStub.addMod(branch2, Set.of(someRoot));
+        loaderHelperStub.addMod(commonLeaf, Set.of(branch1, branch2));
+
+        // Act
+        Collection<String> actual = createInjectorNodeFinder().getParentNode(commonLeaf);
+
+        // Assert
+        assertNotNull(actual);
+        assertEquals(1, actual.size());
+    }
 }
