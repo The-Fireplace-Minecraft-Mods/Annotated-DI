@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 import dev.the_fireplace.annotateddi.api.di.Implementation;
 import dev.the_fireplace.annotateddi.impl.domain.loader.InjectorNodeFinder;
 import dev.the_fireplace.annotateddi.impl.domain.loader.LoaderHelper;
+import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -69,15 +70,61 @@ public final class InjectorNodeFinderImpl implements InjectorNodeFinder
         }
         Collection<Collection<String>> nodes = new HashSet<>();
 
-        for (String currentMod : possibleChildren) {
-            getNodeIfAttachable(parentNode, parentDependencies, currentMod)
-                .ifPresent(nodes::add);
+        Collection<String> remainingChildren = new HashSet<>();
+        for (String evaluatingModId : possibleChildren) {
+            Optional<Collection<String>> selfContainedNode = getNodeStartingSelfContainedBranch(parentNode, parentDependencies, evaluatingModId);
+            if (selfContainedNode.isPresent()) {
+                nodes.add(selfContainedNode.get());
+            } else {
+                remainingChildren.add(evaluatingModId);
+            }
+        }
+        Set<String> candidateCombinedBranchStarts = getCandidateCombinedBranchStarts(parentDependencies, remainingChildren);
+        Map<Integer, Set<Set<String>>> candidateGroupings = getCombinedBranchCandidateGroupings(candidateCombinedBranchStarts);
+        Collection<String> confirmedCandidates = new HashSet<>();
+        for (int groupSize = 2; groupSize <= candidateCombinedBranchStarts.size(); groupSize++) {
+            for (Set<String> candidateGroup : candidateGroupings.get(groupSize)) {
+                if (candidateGroup.stream().anyMatch(confirmedCandidates::contains)) {
+                    continue;
+                }
+                String[] candidateGroupArray = candidateGroup.toArray(new String[0]);
+                String firstCandidate = candidateGroupArray[0];
+                candidateGroupArray = Arrays.copyOfRange(candidateGroupArray, 1, candidateGroupArray.length);
+                Collection<String> evaluatingModAllChildren = childMods.getOrDefault(firstCandidate, Collections.emptySet());
+                evaluatingModAllChildren.addAll(Set.of(candidateGroupArray));
+                for (String otherCandidate : candidateGroupArray) {
+                    evaluatingModAllChildren.addAll(childMods.getOrDefault(otherCandidate, Collections.emptySet()));
+                }
+                boolean isSelfContainedGrouping = this.isSelfContainedBranch(parentDependencies, firstCandidate, evaluatingModAllChildren);
+                if (isSelfContainedGrouping) {
+                    Collection<String> node = Set.of(firstCandidate);
+                    populateDependencyTree(node, parentDependencies);
+                    nodes.add(node);
+                    confirmedCandidates.addAll(candidateGroup);
+                }
+            }
         }
 
         dependencyTree.put(parentNode, nodes);
     }
 
-    private Optional<Collection<String>> getNodeIfAttachable(Collection<String> parentNode, Collection<String> parentDependencies, String evaluatingModId) {
+    private Map<Integer, Set<Set<String>>> getCombinedBranchCandidateGroupings(Set<String> candidateCombinedBranchStarts) {
+        if (candidateCombinedBranchStarts.size() < 2) {
+            return Collections.emptyMap();
+        }
+        Set<Set<String>> powerSet = Sets.powerSet(candidateCombinedBranchStarts);
+        Map<Integer, Set<Set<String>>> powerSetGroupedBySize = new Int2ObjectArrayMap<>(candidateCombinedBranchStarts.size() - 2);
+        for (Set<String> powerSetEntry : powerSet) {
+            if (powerSetEntry.size() <= 1) {
+                continue;
+            }
+            powerSetGroupedBySize.computeIfAbsent(powerSetEntry.size(), u -> new HashSet<>()).add(powerSetEntry);
+        }
+
+        return powerSetGroupedBySize;
+    }
+
+    private Optional<Collection<String>> getNodeStartingSelfContainedBranch(Collection<String> parentNode, Collection<String> parentDependencies, String evaluatingModId) {
         if (parentNode.contains(evaluatingModId)) {
             return Optional.empty();
         }
@@ -128,6 +175,19 @@ public final class InjectorNodeFinderImpl implements InjectorNodeFinder
         branchSelfContainedDependencies.add(evaluatingMod);
 
         return branchSelfContainedDependencies.containsAll(nodeDependencies);
+    }
+
+    private Set<String> getCandidateCombinedBranchStarts(Collection<String> parentDependencies, Collection<String> remainingChildren) {
+        Set<String> candidateLeaves = new HashSet<>();
+        for (String evaluatingModId : remainingChildren) {
+            Collection<String> evaluatingModDependencies = parentMods.getOrDefault(evaluatingModId, Collections.emptySet());
+            boolean branchMeetsImmediateDependencies = parentDependencies.containsAll(evaluatingModDependencies);
+            if (branchMeetsImmediateDependencies) {
+                candidateLeaves.add(evaluatingModId);
+            }
+        }
+
+        return candidateLeaves;
     }
 
     private void populateAllParentMods() {
