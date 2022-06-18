@@ -3,8 +3,8 @@ package dev.the_fireplace.annotateddi.impl.di;
 import javax.annotation.Nullable;
 import java.util.List;
 
-public final class ImplementationData<T> {
-
+public final class ImplementationData<T>
+{
     private final Class<T> implementation;
     private final List<Class<?>> interfaces;
     private final String name;

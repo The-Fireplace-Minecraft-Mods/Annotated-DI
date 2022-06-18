@@ -3,7 +3,8 @@ package dev.the_fireplace.annotateddi.impl.di;
 import java.util.List;
 import java.util.Map;
 
-public final class ImplementationContainer {
+public final class ImplementationContainer
+{
     private final String version;
     private final Map<Class, List<ImplementationData>> implementations;
 

@@ -4,7 +4,8 @@ import com.google.common.collect.Lists;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public final class AnnotatedDIConfigModule extends AbstractModule

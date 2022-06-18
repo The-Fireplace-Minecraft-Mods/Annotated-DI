@@ -69,7 +69,7 @@ public final class ForgeLoaderHelper implements LoaderHelper
         }
         IModFileInfo owningFile = modContainer.get().getModInfo().getOwningFile();
         if (owningFile instanceof ModFileInfo) {
-            Path resource = ((ModFileInfo)owningFile).getFile().findResource(DI_CONFIG_FILE_NAME);
+            Path resource = ((ModFileInfo) owningFile).getFile().findResource(DI_CONFIG_FILE_NAME);
             if (Files.exists(resource)) {
                 return Optional.of(resource);
             }
