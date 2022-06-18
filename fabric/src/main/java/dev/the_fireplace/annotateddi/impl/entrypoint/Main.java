@@ -1,6 +1,5 @@
 package dev.the_fireplace.annotateddi.impl.entrypoint;
 
-import dev.the_fireplace.annotateddi.api.Injectors;
 import dev.the_fireplace.annotateddi.api.entrypoints.DIModInitializer;
 import dev.the_fireplace.annotateddi.impl.di.FabricInjectorSetup;
 import net.fabricmc.api.ModInitializer;
@@ -14,8 +13,6 @@ public final class Main implements ModInitializer
         FabricLoader.getInstance().getEntrypointContainers(
             "di-main",
             DIModInitializer.class
-        ).forEach((entrypoint) -> entrypoint.getEntrypoint().onInitialize(
-            Injectors.INSTANCE.getAutoInjector(entrypoint.getProvider().getMetadata().getId())
-        ));
+        ).forEach(entrypoint -> entrypoint.getEntrypoint().onInitialize());
     }
 }
