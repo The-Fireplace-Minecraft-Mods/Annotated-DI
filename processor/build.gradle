@@ -9,6 +9,4 @@ dependencies {
     implementation "com.google.code.gson:gson:${project.gson_version}"
     compileOnly "com.google.auto.service:auto-service-annotations:${project.autoservice_version}"
     annotationProcessor "com.google.auto.service:auto-service:${project.autoservice_version}"
-
-    compileOnly project(":common")
 }
