@@ -1,6 +1,5 @@
 package dev.the_fireplace.annotateddi.impl.entrypoint;
 
-import dev.the_fireplace.annotateddi.api.Injectors;
 import dev.the_fireplace.annotateddi.api.entrypoints.ClientDIModInitializer;
 import dev.the_fireplace.annotateddi.impl.di.FabricInjectorSetup;
 import net.fabricmc.api.ClientModInitializer;
@@ -17,8 +16,6 @@ public final class Client implements ClientModInitializer
         FabricLoader.getInstance().getEntrypointContainers(
             "di-client",
             ClientDIModInitializer.class
-        ).forEach((entrypoint) -> entrypoint.getEntrypoint().onInitializeClient(
-            Injectors.INSTANCE.getAutoInjector(entrypoint.getProvider().getMetadata().getId())
-        ));
+        ).forEach(entrypoint -> entrypoint.getEntrypoint().onInitializeClient());
     }
 }
