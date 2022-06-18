@@ -287,4 +287,25 @@ public final class InjectorNodeFinderImplTest
         assertNotNull(actual);
         assertEquals(1, actual.size());
     }
+
+    @Test
+    public void test_getParent_nonChainedDependencies_withCodependentDependency_returnsParentNode() {
+        // Arrange
+        String someRoot = "someRoot";
+        String branch1 = "branch1";
+        String codependent1 = "codependent1";
+        String codependent2 = "codependent2";
+        String commonLeaf = "commonLeaf";
+        loaderHelperStub.addMod(someRoot, Set.of());
+        loaderHelperStub.addMod(branch1, Set.of(someRoot));
+        loaderHelperStub.addMod(codependent1, Set.of(someRoot, codependent2));
+        loaderHelperStub.addMod(codependent2, Set.of(someRoot, codependent1));
+        loaderHelperStub.addMod(commonLeaf, Set.of(branch1, codependent1));
+
+        // Act
+        Collection<String> actual = createInjectorNodeFinder().getParentNode(commonLeaf);
+
+        // Assert
+        assertNotNull(actual);
+    }
 }
