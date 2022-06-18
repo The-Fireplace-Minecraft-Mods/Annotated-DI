@@ -17,173 +17,209 @@ public final class InjectorNodeFinderImpl implements InjectorNodeFinder
 {
     private static final String ROOT_MOD_ID = "minecraft";
     private final LoaderHelper loaderHelper;
-    private final Map<String, Collection<String>> childMods;
-    private final Map<String, Collection<String>> parentMods;
-    private final Map<Collection<String>, Collection<Collection<String>>> dependencyTree;
-    private final Map<String, Collection<String>> childParentNodes;
-    private final Collection<String> loadedMods;
+    private final Set<String> loadedMods;
+    private final Map<String, Set<String>> childMods;
+    private final Map<String, Set<String>> parentMods;
+    private final Set<Node> loadedNodes;
+    private final Map<String, Node> nodesByModId;
+    private final Map<Node, Set<Node>> childNodes;
+    private final Map<Node, Set<Node>> parentNodes;
+    private final Map<Node, Set<Node>> dependencyTree;
+    private final Map<String, Node> childParentNodes;
 
     @Inject
     public InjectorNodeFinderImpl(LoaderHelper loaderHelper) {
         this.loaderHelper = loaderHelper;
+        loadedMods = new HashSet<>(loaderHelper.getLoadedMods());
         childMods = new HashMap<>(5);
         parentMods = new HashMap<>(5);
+        loadedNodes = new HashSet<>(5);
+        nodesByModId = new HashMap<>(5);
+        childNodes = new HashMap<>(5);
+        parentNodes = new HashMap<>(5);
         dependencyTree = new HashMap<>(5);
         childParentNodes = new HashMap<>(5);
-        loadedMods = loaderHelper.getLoadedMods();
         buildTree();
     }
 
     private void buildTree() {
         populateAllParentMods();
         populateAllChildMods();
-        Collection<String> rootNode = Sets.newHashSet(ROOT_MOD_ID);
+        Node rootNode = new Node(Set.of(ROOT_MOD_ID));
         if (this.loaderHelper.isModLoaded("java")) {
-            rootNode.add("java");
+            rootNode = rootNode.with("java");
+            nodesByModId.put("java", rootNode);
         }
-        populateDependencyTree(rootNode, new HashSet<>());
+        loadedNodes.add(rootNode);
+        nodesByModId.put(ROOT_MOD_ID, rootNode);
+        populateLoadedNodes();
+        populateAllParentNodes();
+        populateAllChildNodes();
+        populateDependencyTree(rootNode, new HashSet<>(), getAllChildren(rootNode));
         calculateImmediateParents();
     }
 
+    private void populateLoadedNodes() {
+        for (String modId : loadedMods) {
+            if (this.nodesByModId.containsKey(modId)) {
+                continue;
+            }
+            Set<String> codependencies = getCodependencies(modId, new HashSet<>());
+            Node node = new Node(codependencies);
+            this.loadedNodes.add(node);
+            for (String nodeMod : node.getModIds()) {
+                this.nodesByModId.put(nodeMod, node);
+            }
+        }
+    }
+
+    private Set<String> getCodependencies(String modId, Set<String> visitedMods) {
+        Set<String> codependencies = new HashSet<>(Sets.intersection(
+            childMods.getOrDefault(modId, Collections.emptySet()),
+            parentMods.getOrDefault(modId, Collections.emptySet())
+        ));
+        codependencies.add(modId);
+        visitedMods.add(modId);
+        for (String codependency : codependencies) {
+            if (!visitedMods.contains(codependency)) {
+                codependencies.addAll(getCodependencies(codependency, visitedMods));
+            }
+        }
+        return codependencies;
+    }
+
     private void calculateImmediateParents() {
-        for (Map.Entry<Collection<String>, Collection<Collection<String>>> entry : dependencyTree.entrySet()) {
-            Collection<String> parents = entry.getKey();
-            Collection<Collection<String>> children = entry.getValue();
-            for (Collection<String> childNode : children) {
-                for (String child : childNode) {
+        for (Map.Entry<Node, Set<Node>> entry : dependencyTree.entrySet()) {
+            Node parents = entry.getKey();
+            Collection<Node> children = entry.getValue();
+            for (Node childNode : children) {
+                for (String child : childNode.getModIds()) {
                     childParentNodes.put(child, parents);
                 }
             }
         }
     }
 
-    private void populateDependencyTree(Collection<String> parentNode, Collection<String> parentDependencies) {
-        boolean isPopulatingCodependentMod = parentDependencies.containsAll(parentNode);
-        if (isPopulatingCodependentMod) {
-            return;
-        }
+    private void populateDependencyTree(Node parentNode, Set<Node> parentDependencies, Collection<Node> children) {
         parentDependencies = new HashSet<>(parentDependencies);
-        parentDependencies.addAll(parentNode);
-        Collection<String> possibleChildren = new HashSet<>();
-        for (String mod : parentNode) {
-            possibleChildren.addAll(childMods.getOrDefault(mod, Collections.emptySet()));
-        }
-        Collection<Collection<String>> nodes = new HashSet<>();
+        parentDependencies.add(parentNode);
+        Set<Node> nodes = new HashSet<>();
 
-        Collection<String> remainingChildren = new HashSet<>();
-        for (String evaluatingModId : possibleChildren) {
-            Optional<Collection<String>> selfContainedNode = getNodeStartingSelfContainedBranch(parentNode, parentDependencies, evaluatingModId);
-            if (selfContainedNode.isPresent()) {
-                nodes.add(selfContainedNode.get());
+        Set<Node> remainingChildren = new HashSet<>();
+        for (Node evaluatingChildNode : children) {
+            boolean nodeStartsSelfContainedBranch = nodeStartsSelfContainedBranch(parentDependencies, evaluatingChildNode);
+            if (nodeStartsSelfContainedBranch) {
+                nodes.add(evaluatingChildNode);
             } else {
-                remainingChildren.add(evaluatingModId);
+                remainingChildren.add(evaluatingChildNode);
             }
         }
-        Set<String> candidateCombinedBranchStarts = getCandidateCombinedBranchStarts(parentDependencies, remainingChildren);
-        Map<Integer, Set<Set<String>>> candidateGroupings = getCombinedBranchCandidateGroupings(candidateCombinedBranchStarts);
-        Collection<String> confirmedCandidates = new HashSet<>();
+        nodes.addAll(getNodesStartingCombinedBranches(parentDependencies, remainingChildren));
+
+        dependencyTree.put(parentNode, nodes);
+    }
+
+    private Collection<Node> getNodesStartingCombinedBranches(Set<Node> parentDependencies, Set<Node> remainingChildren) {
+        Collection<Node> nodes = new HashSet<>();
+        Set<Node> candidateCombinedBranchStarts = getCandidateCombinedBranchStarts(parentDependencies, remainingChildren);
+        Map<Integer, Set<Set<Node>>> candidateGroupings = getCombinedBranchCandidateGroupings(candidateCombinedBranchStarts);
+        Collection<Node> confirmedCandidates = new HashSet<>();
         for (int groupSize = 2; groupSize <= candidateCombinedBranchStarts.size(); groupSize++) {
-            for (Set<String> candidateGroup : candidateGroupings.get(groupSize)) {
+            for (Set<Node> candidateGroup : candidateGroupings.get(groupSize)) {
                 if (candidateGroup.stream().anyMatch(confirmedCandidates::contains)) {
                     continue;
                 }
-                String[] candidateGroupArray = candidateGroup.toArray(new String[0]);
-                String firstCandidate = candidateGroupArray[0];
-                candidateGroupArray = Arrays.copyOfRange(candidateGroupArray, 1, candidateGroupArray.length);
-                Collection<String> evaluatingModAllChildren = childMods.getOrDefault(firstCandidate, Collections.emptySet());
-                evaluatingModAllChildren.addAll(Set.of(candidateGroupArray));
-                for (String otherCandidate : candidateGroupArray) {
-                    evaluatingModAllChildren.addAll(childMods.getOrDefault(otherCandidate, Collections.emptySet()));
-                }
-                boolean isSelfContainedGrouping = this.isSelfContainedBranch(parentDependencies, firstCandidate, evaluatingModAllChildren);
-                if (isSelfContainedGrouping) {
-                    Collection<String> node = Set.of(firstCandidate);
-                    populateDependencyTree(node, parentDependencies);
-                    nodes.add(node);
+                boolean startsCombinedBranch = nodeStartsCombinedBranch(parentDependencies, candidateGroup);
+                if (startsCombinedBranch) {
                     confirmedCandidates.addAll(candidateGroup);
                 }
             }
         }
 
-        dependencyTree.put(parentNode, nodes);
+        return nodes;
     }
 
-    private Map<Integer, Set<Set<String>>> getCombinedBranchCandidateGroupings(Set<String> candidateCombinedBranchStarts) {
+    private boolean nodeStartsCombinedBranch(Set<Node> parentDependencies, Set<Node> candidateGroup) {
+        Node[] remainingCandidatesInGroup = candidateGroup.toArray(new Node[0]);
+        Node firstCandidate = remainingCandidatesInGroup[0];
+        remainingCandidatesInGroup = Arrays.copyOfRange(remainingCandidatesInGroup, 1, remainingCandidatesInGroup.length);
+
+        Collection<Node> evaluatingGroupAllChildren = new HashSet<>(Set.of(remainingCandidatesInGroup));
+        for (Node candidate : candidateGroup) {
+            evaluatingGroupAllChildren.addAll(getAllChildren(candidate));
+        }
+        boolean isSelfContainedGrouping = this.isSelfContainedBranch(parentDependencies, firstCandidate, evaluatingGroupAllChildren);
+        if (isSelfContainedGrouping) {
+            populateDependencyTree(firstCandidate, parentDependencies, evaluatingGroupAllChildren);
+            return true;
+        }
+
+        return false;
+    }
+
+    private Set<Node> getAllChildren(Node node) {
+        return new HashSet<>(childNodes.getOrDefault(node, Collections.emptySet()));
+    }
+
+    private Set<Node> getAllDependencies(Node node) {
+        return new HashSet<>(parentNodes.getOrDefault(node, Collections.emptySet()));
+    }
+
+    private Map<Integer, Set<Set<Node>>> getCombinedBranchCandidateGroupings(Set<Node> candidateCombinedBranchStarts) {
         if (candidateCombinedBranchStarts.size() < 2) {
             return Collections.emptyMap();
         }
-        Set<Set<String>> powerSet = Sets.powerSet(candidateCombinedBranchStarts);
-        Map<Integer, Set<Set<String>>> powerSetGroupedBySize = new Int2ObjectArrayMap<>(candidateCombinedBranchStarts.size() - 2);
-        for (Set<String> powerSetEntry : powerSet) {
-            if (powerSetEntry.size() <= 1) {
+        Set<Set<Node>> powerSet = Sets.powerSet(candidateCombinedBranchStarts);
+        Map<Integer, Set<Set<Node>>> subsetsBySize = new Int2ObjectArrayMap<>(candidateCombinedBranchStarts.size() - 1);
+        for (Set<Node> subset : powerSet) {
+            if (subset.size() <= 1) {
                 continue;
             }
-            powerSetGroupedBySize.computeIfAbsent(powerSetEntry.size(), u -> new HashSet<>()).add(powerSetEntry);
+            subsetsBySize.computeIfAbsent(subset.size(), u -> new HashSet<>()).add(subset);
         }
 
-        return powerSetGroupedBySize;
+        return subsetsBySize;
     }
 
-    private Optional<Collection<String>> getNodeStartingSelfContainedBranch(Collection<String> parentNode, Collection<String> parentDependencies, String evaluatingModId) {
-        if (parentNode.contains(evaluatingModId)) {
-            return Optional.empty();
-        }
-        Collection<String> evaluatingModAllChildren = childMods.getOrDefault(evaluatingModId, Collections.emptySet());
+    private boolean nodeStartsSelfContainedBranch(Set<Node> parentDependencies, Node evaluatingNode) {
+        Collection<Node> evaluatingModAllChildren = getAllChildren(evaluatingNode);
         boolean hasNoChildren = evaluatingModAllChildren.isEmpty();
-        Collection<String> evaluatingModDependencies = parentMods.getOrDefault(evaluatingModId, Collections.emptySet());
+        Collection<Node> evaluatingModDependencies = getAllDependencies(evaluatingNode);
         boolean branchMeetsImmediateDependencies = parentDependencies.containsAll(evaluatingModDependencies);
         if (branchMeetsImmediateDependencies) {
-            Set<String> node = Sets.newHashSet(evaluatingModId);
             if (hasNoChildren) {
-                dependencyTree.put(node, Collections.emptySet());
-                return Optional.of(node);
+                dependencyTree.put(evaluatingNode, Collections.emptySet());
+                return true;
             }
-            boolean isSelfContainedBranch = isSelfContainedBranch(parentDependencies, evaluatingModId, evaluatingModAllChildren);
+            boolean isSelfContainedBranch = isSelfContainedBranch(parentDependencies, evaluatingNode, evaluatingModAllChildren);
             if (isSelfContainedBranch) {
-                populateDependencyTree(node, parentDependencies);
-                return Optional.of(node);
-            }
-            return Optional.empty();
-        }
-        if (hasNoChildren) {
-            return Optional.empty();
-        }
-        Collection<String> unfulfilledDependencies = new HashSet<>(evaluatingModDependencies);
-        unfulfilledDependencies.removeAll(parentDependencies);
-        boolean isCodependent = evaluatingModAllChildren.containsAll(unfulfilledDependencies);
-        if (isCodependent) {
-            Set<String> node = new HashSet<>(unfulfilledDependencies);
-            node.add(evaluatingModId);
-
-            boolean isSelfContainedBranch = isSelfContainedBranch(parentDependencies, evaluatingModId, evaluatingModAllChildren);
-            if (isSelfContainedBranch) {
-                populateDependencyTree(node, parentDependencies);
-                return Optional.of(node);
+                populateDependencyTree(evaluatingNode, parentDependencies, evaluatingModAllChildren);
+                return true;
             }
         }
 
-        return Optional.empty();
+        return false;
     }
 
-    private boolean isSelfContainedBranch(Collection<String> parentDependencies, String evaluatingMod, Collection<String> evaluatingModAllChildren) {
-        Collection<String> nodeDependencies = new HashSet<>();
-        for (String nodeChild : evaluatingModAllChildren) {
-            nodeDependencies.addAll(parentMods.getOrDefault(nodeChild, Collections.emptySet()));
+    private boolean isSelfContainedBranch(Collection<Node> parentDependencies, Node evaluatingNode, Collection<Node> evaluatingNodeAllChildren) {
+        Collection<Node> nodeDependencies = new HashSet<>();
+        for (Node nodeChild : evaluatingNodeAllChildren) {
+            nodeDependencies.addAll(getAllDependencies(nodeChild));
         }
-        Collection<String> branchSelfContainedDependencies = new HashSet<>(parentDependencies);
-        branchSelfContainedDependencies.addAll(evaluatingModAllChildren);
-        branchSelfContainedDependencies.add(evaluatingMod);
+        Collection<Node> branchSelfContainedDependencies = new HashSet<>(parentDependencies);
+        branchSelfContainedDependencies.addAll(evaluatingNodeAllChildren);
+        branchSelfContainedDependencies.add(evaluatingNode);
 
         return branchSelfContainedDependencies.containsAll(nodeDependencies);
     }
 
-    private Set<String> getCandidateCombinedBranchStarts(Collection<String> parentDependencies, Collection<String> remainingChildren) {
-        Set<String> candidateLeaves = new HashSet<>();
-        for (String evaluatingModId : remainingChildren) {
-            Collection<String> evaluatingModDependencies = parentMods.getOrDefault(evaluatingModId, Collections.emptySet());
-            boolean branchMeetsImmediateDependencies = parentDependencies.containsAll(evaluatingModDependencies);
+    private Set<Node> getCandidateCombinedBranchStarts(Set<Node> parentDependencies, Set<Node> remainingChildren) {
+        Set<Node> candidateLeaves = new HashSet<>();
+        for (Node evaluatingChildNode : remainingChildren) {
+            Set<Node> evaluatingChildDependencies = getAllDependencies(evaluatingChildNode);
+            boolean branchMeetsImmediateDependencies = parentDependencies.containsAll(evaluatingChildDependencies);
             if (branchMeetsImmediateDependencies) {
-                candidateLeaves.add(evaluatingModId);
+                candidateLeaves.add(evaluatingChildNode);
             }
         }
 
@@ -216,6 +252,38 @@ public final class InjectorNodeFinderImpl implements InjectorNodeFinder
         return this.parentMods.get(modId);
     }
 
+    private void populateAllParentNodes() {
+        for (Node node : loadedNodes) {
+            getParents(node);
+        }
+    }
+
+    private Collection<Node> getParents(Node node) {
+        if (parentNodes.containsKey(node)) {
+            return parentNodes.get(node);
+        }
+        Collection<Node> parents = this.parentNodes.computeIfAbsent(node, k -> new HashSet<>());
+
+        for (String modId : node.getModIds()) {
+            for (String parentModId : getParents(modId)) {
+                Node parentNode = this.nodesByModId.get(parentModId);
+                if (!parentNode.equals(node)) {
+                    parents.add(parentNode);
+                }
+            }
+        }
+
+        return this.parentNodes.get(node);
+    }
+
+    private void populateAllChildNodes() {
+        for (Node node : loadedNodes) {
+            for (Node parent : getParents(node)) {
+                this.childNodes.computeIfAbsent(parent, k -> new HashSet<>()).add(node);
+            }
+        }
+    }
+
     private void populateAllChildMods() {
         for (String modId : loadedMods) {
             for (String parent : getParents(modId)) {
@@ -227,21 +295,47 @@ public final class InjectorNodeFinderImpl implements InjectorNodeFinder
     @Override
     @Nullable
     public Collection<String> getParentNode(String modId) {
-        Collection<String> parentNode = childParentNodes.get(modId);
-        if (parentNode == null || parentNode.size() == 0) {
-            return null;
-        }
-        return parentNode;
+        Node parentNode = childParentNodes.get(modId);
+
+        return parentNode == null ? null : parentNode.getModIds();
     }
 
     @Override
     public Collection<String> getNode(String modId) {
-        for (Collection<String> node : dependencyTree.keySet()) {
-            if (node.contains(modId)) {
-                return node;
-            }
+        if (this.nodesByModId.containsKey(modId)) {
+            return this.nodesByModId.get(modId).getModIds();
+        }
+        return Sets.newHashSet(modId);
+    }
+
+    private static class Node {
+        private final Set<String> modIds;
+
+        private Node(Set<String> modIds) {
+            this.modIds = modIds;
         }
 
-        return Sets.newHashSet(modId);
+        public Set<String> getModIds() {
+            return modIds;
+        }
+
+        public Node with(String modId) {
+            return withAll(Set.of(modId));
+        }
+
+        public Node withAll(Set<String> modIds) {
+            return new Node(Sets.union(this.modIds, modIds));
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) {
+                return true;
+            }
+            if (obj instanceof Node otherNode) {
+                return this.modIds.equals(otherNode.modIds);
+            }
+            return false;
+        }
     }
 }
