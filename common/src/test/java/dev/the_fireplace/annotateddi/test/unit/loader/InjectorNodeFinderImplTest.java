@@ -232,10 +232,10 @@ public final class InjectorNodeFinderImplTest
         String modId2 = "testmod2";
         String modId3 = "testmod3";
         String modId4 = "testmod4";
-        loaderHelperStub.addMod(modId, Set.of());
-        loaderHelperStub.addMod(modId2, Set.of(modId, missingModId));
-        loaderHelperStub.addMod(modId3, Set.of(modId2, missingModId));
-        loaderHelperStub.addMod(modId4, Set.of(modId3));
+        loaderHelperStub.addMod(modId, Collections.emptySet());
+        loaderHelperStub.addMod(modId2, Sets.newHashSet(modId, missingModId));
+        loaderHelperStub.addMod(modId3, Sets.newHashSet(modId2, missingModId));
+        loaderHelperStub.addMod(modId4, Sets.newHashSet(modId3));
 
         // Act
         Collection<String> actual = createInjectorNodeFinder().getParentNode(modId4);
@@ -254,10 +254,10 @@ public final class InjectorNodeFinderImplTest
         String modId2 = "testmod2";
         String modId3 = "testmod3";
         String modId4 = "testmod4";
-        loaderHelperStub.addMod(modId, Set.of(modId3));
-        loaderHelperStub.addMod(modId2, Set.of(modId, missingModId));
-        loaderHelperStub.addMod(modId3, Set.of(modId2, missingModId));
-        loaderHelperStub.addMod(modId4, Set.of(modId3));
+        loaderHelperStub.addMod(modId, Sets.newHashSet(modId3));
+        loaderHelperStub.addMod(modId2, Sets.newHashSet(modId, missingModId));
+        loaderHelperStub.addMod(modId3, Sets.newHashSet(modId2, missingModId));
+        loaderHelperStub.addMod(modId4, Sets.newHashSet(modId3));
 
         // Act
         Collection<String> actual = createInjectorNodeFinder().getParentNode(modId4);
@@ -277,10 +277,10 @@ public final class InjectorNodeFinderImplTest
         String branch1 = "branch1";
         String branch2 = "branch2";
         String commonLeaf = "commonLeaf";
-        loaderHelperStub.addMod(someRoot, Set.of());
-        loaderHelperStub.addMod(branch1, Set.of(someRoot));
-        loaderHelperStub.addMod(branch2, Set.of(someRoot));
-        loaderHelperStub.addMod(commonLeaf, Set.of(branch1, branch2));
+        loaderHelperStub.addMod(someRoot, Collections.emptySet());
+        loaderHelperStub.addMod(branch1, Sets.newHashSet(someRoot));
+        loaderHelperStub.addMod(branch2, Sets.newHashSet(someRoot));
+        loaderHelperStub.addMod(commonLeaf, Sets.newHashSet(branch1, branch2));
 
         // Act
         Collection<String> actual = createInjectorNodeFinder().getParentNode(commonLeaf);
@@ -298,11 +298,11 @@ public final class InjectorNodeFinderImplTest
         String codependent1 = "codependent1";
         String codependent2 = "codependent2";
         String commonLeaf = "commonLeaf";
-        loaderHelperStub.addMod(someRoot, Set.of());
-        loaderHelperStub.addMod(branch1, Set.of(someRoot));
-        loaderHelperStub.addMod(codependent1, Set.of(someRoot, codependent2));
-        loaderHelperStub.addMod(codependent2, Set.of(someRoot, codependent1));
-        loaderHelperStub.addMod(commonLeaf, Set.of(branch1, codependent1));
+        loaderHelperStub.addMod(someRoot, Collections.emptySet());
+        loaderHelperStub.addMod(branch1, Sets.newHashSet(someRoot));
+        loaderHelperStub.addMod(codependent1, Sets.newHashSet(someRoot, codependent2));
+        loaderHelperStub.addMod(codependent2, Sets.newHashSet(someRoot, codependent1));
+        loaderHelperStub.addMod(commonLeaf, Sets.newHashSet(branch1, codependent1));
 
         // Act
         Collection<String> actual = createInjectorNodeFinder().getParentNode(commonLeaf);

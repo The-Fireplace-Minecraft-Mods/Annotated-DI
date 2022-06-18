@@ -45,7 +45,7 @@ public final class InjectorNodeFinderImpl implements InjectorNodeFinder
     private void buildTree() {
         populateAllParentMods();
         populateAllChildMods();
-        Node rootNode = new Node(Set.of(ROOT_MOD_ID));
+        Node rootNode = new Node(Sets.newHashSet(ROOT_MOD_ID));
         if (this.loaderHelper.isModLoaded("java")) {
             rootNode = rootNode.with("java");
             nodesByModId.put("java", rootNode);
@@ -144,7 +144,7 @@ public final class InjectorNodeFinderImpl implements InjectorNodeFinder
         Node firstCandidate = remainingCandidatesInGroup[0];
         remainingCandidatesInGroup = Arrays.copyOfRange(remainingCandidatesInGroup, 1, remainingCandidatesInGroup.length);
 
-        Collection<Node> evaluatingGroupAllChildren = new HashSet<>(Set.of(remainingCandidatesInGroup));
+        Collection<Node> evaluatingGroupAllChildren = new HashSet<>(Sets.newHashSet(remainingCandidatesInGroup));
         for (Node candidate : candidateGroup) {
             evaluatingGroupAllChildren.addAll(getAllChildren(candidate));
         }
@@ -320,7 +320,7 @@ public final class InjectorNodeFinderImpl implements InjectorNodeFinder
         }
 
         public Node with(String modId) {
-            return withAll(Set.of(modId));
+            return withAll(Sets.newHashSet(modId));
         }
 
         public Node withAll(Set<String> modIds) {
@@ -332,8 +332,8 @@ public final class InjectorNodeFinderImpl implements InjectorNodeFinder
             if (obj == this) {
                 return true;
             }
-            if (obj instanceof Node otherNode) {
-                return this.modIds.equals(otherNode.modIds);
+            if (obj instanceof Node) {
+                return this.modIds.equals(((Node)obj).modIds);
             }
             return false;
         }
