@@ -1,13 +1,16 @@
 package dev.the_fireplace.annotateddi.impl.injector;
 
-import com.google.inject.*;
+import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Singleton;
 import dev.the_fireplace.annotateddi.api.Injectors;
 import dev.the_fireplace.annotateddi.api.di.Implementation;
-import dev.the_fireplace.annotateddi.impl.domain.loader.ModInjectableData;
-import dev.the_fireplace.annotateddi.impl.domain.loader.InjectorNodeFinder;
 import dev.the_fireplace.annotateddi.impl.domain.injector.InjectorFactory;
+import dev.the_fireplace.annotateddi.impl.domain.loader.InjectorNodeFinder;
+import dev.the_fireplace.annotateddi.impl.domain.loader.ModInjectableData;
 
-import java.util.*;
+import java.util.Collection;
 
 @Singleton
 @Implementation

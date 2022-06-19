@@ -4,7 +4,6 @@ import dev.the_fireplace.annotateddi.api.Injectors;
 import dev.the_fireplace.annotateddi.api.entrypoints.DIModuleCreator;
 import dev.the_fireplace.annotateddi.impl.AnnotatedDIConstants;
 import dev.the_fireplace.annotateddi.impl.domain.loader.ModInjectableData;
-import dev.the_fireplace.annotateddi.impl.injector.InjectorFactoryImpl;
 import net.fabricmc.loader.api.FabricLoader;
 
 public final class FabricInjectorSetup

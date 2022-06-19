@@ -308,7 +308,8 @@ public final class InjectorNodeFinderImpl implements InjectorNodeFinder
         return Sets.newHashSet(modId);
     }
 
-    private static class Node {
+    private static class Node
+    {
         private final Set<String> modIds;
 
         private Node(Set<String> modIds) {
@@ -333,7 +334,7 @@ public final class InjectorNodeFinderImpl implements InjectorNodeFinder
                 return true;
             }
             if (obj instanceof Node) {
-                return this.modIds.equals(((Node)obj).modIds);
+                return this.modIds.equals(((Node) obj).modIds);
             }
             return false;
         }

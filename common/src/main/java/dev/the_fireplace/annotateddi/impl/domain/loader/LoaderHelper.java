@@ -7,6 +7,7 @@ import java.util.Optional;
 public interface LoaderHelper
 {
     Collection<String> getLoadedMods();
+
     boolean isModLoaded(String modId);
 
     Collection<String> getDependencies(String modId);
