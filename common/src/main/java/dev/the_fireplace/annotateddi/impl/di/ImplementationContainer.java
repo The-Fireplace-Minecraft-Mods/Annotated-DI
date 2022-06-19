@@ -6,5 +6,6 @@ import java.util.Map;
 public record ImplementationContainer(
     String version,
     Map<Class, List<ImplementationData>> implementations
-) {
+)
+{
 }

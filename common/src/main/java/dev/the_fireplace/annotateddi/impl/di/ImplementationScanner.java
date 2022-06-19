@@ -21,8 +21,7 @@ public final class ImplementationScanner
     private final LoaderHelper loaderHelper;
 
     @Inject
-    public ImplementationScanner(LoaderHelper loaderHelper)
-    {
+    public ImplementationScanner(LoaderHelper loaderHelper) {
         this.loaderHelper = loaderHelper;
     }
 

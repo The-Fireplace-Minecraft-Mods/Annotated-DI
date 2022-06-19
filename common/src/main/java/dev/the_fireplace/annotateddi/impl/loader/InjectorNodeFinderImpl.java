@@ -308,7 +308,8 @@ public final class InjectorNodeFinderImpl implements InjectorNodeFinder
         return Set.of(modId);
     }
 
-    private static class Node {
+    private static class Node
+    {
         private final Set<String> modIds;
 
         private Node(Set<String> modIds) {

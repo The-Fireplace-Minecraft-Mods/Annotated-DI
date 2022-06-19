@@ -5,7 +5,6 @@ import dev.the_fireplace.annotateddi.api.CustomModuleRegistry;
 import dev.the_fireplace.annotateddi.api.Injectors;
 import dev.the_fireplace.annotateddi.impl.AnnotatedDIConstants;
 import dev.the_fireplace.annotateddi.impl.domain.loader.ModInjectableData;
-import dev.the_fireplace.annotateddi.impl.injector.InjectorFactoryImpl;
 import net.minecraftforge.fml.ModLoadingContext;
 
 import java.util.Collection;

@@ -9,5 +9,6 @@ public record ImplementationData<T>(
     String name,
     boolean useAllInterfaces,
     @Nullable String environment
-) {
+)
+{
 }
