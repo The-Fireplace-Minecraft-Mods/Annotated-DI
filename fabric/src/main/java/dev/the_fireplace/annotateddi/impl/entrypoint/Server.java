@@ -1,6 +1,5 @@
 package dev.the_fireplace.annotateddi.impl.entrypoint;
 
-import dev.the_fireplace.annotateddi.api.entrypoints.DedicatedServerDIModInitializer;
 import dev.the_fireplace.annotateddi.impl.di.FabricInjectorSetup;
 import net.fabricmc.api.DedicatedServerModInitializer;
 import net.fabricmc.api.EnvType;
@@ -15,7 +14,7 @@ public final class Server implements DedicatedServerModInitializer
         FabricInjectorSetup.init();
         FabricLoader.getInstance().getEntrypointContainers(
             "di-server",
-            DedicatedServerDIModInitializer.class
+            DedicatedServerModInitializer.class
         ).forEach(entrypoint -> entrypoint.getEntrypoint().onInitializeServer());
     }
 }
