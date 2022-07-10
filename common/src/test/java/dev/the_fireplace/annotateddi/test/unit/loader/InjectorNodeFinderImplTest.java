@@ -1,6 +1,7 @@
 package dev.the_fireplace.annotateddi.test.unit.loader;
 
 import dev.the_fireplace.annotateddi.impl.loader.InjectorNodeFinderImpl;
+import dev.the_fireplace.annotateddi.impl.loader.InjectorTreeBuilder;
 import dev.the_fireplace.annotateddi.test.stub.LoaderHelperStub;
 import org.junit.jupiter.api.Test;
 
@@ -18,7 +19,7 @@ public final class InjectorNodeFinderImplTest
     }
 
     private InjectorNodeFinderImpl createInjectorNodeFinder() {
-        return new InjectorNodeFinderImpl(loaderHelperStub);
+        return new InjectorNodeFinderImpl(new InjectorTreeBuilder(loaderHelperStub));
     }
 
     @Test
