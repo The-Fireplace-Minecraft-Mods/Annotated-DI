@@ -1,3 +1,1 @@
-Implementation annotation now accepts a string for Environment and uses annotation checking as the fallback.
-Implementation annotation now accepts a list of mod ids this implementation depends on - will help with classloading issues for soft dependencies.
-[Fabric] The description in Mod Menu can now be translated.
+Fix crash with large numbers of mods with tangled dependency trees
