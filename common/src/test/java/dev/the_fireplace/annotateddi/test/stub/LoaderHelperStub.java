@@ -2,6 +2,7 @@ package dev.the_fireplace.annotateddi.test.stub;
 
 import dev.the_fireplace.annotateddi.impl.domain.loader.LoaderHelper;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -36,7 +37,7 @@ public final class LoaderHelperStub implements LoaderHelper
 
     @Override
     public Optional<Path> findDiConfigPath(String modId) {
-        return Optional.empty();
+        return Optional.of(new File("").toPath());
     }
 
     public void addMod(String modId, Collection<String> dependencies) {
