@@ -32,10 +32,7 @@ public abstract class ImplementationProcessor extends AbstractProcessor
         for (TypeElement annotation : annotations) {
             Set<? extends Element> annotatedElements = roundEnv.getElementsAnnotatedWith(annotation);
             List<Element> implementations = getValidAnnotatedElements(annotatedElements);
-            processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "Valid @Implementation count: " + implementations.size());
-            if (implementations.isEmpty()) {
-                continue;
-            }
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "Annotated DI processing complete, valid @Implementation count: " + implementations.size());
 
             writeJsonToFile(convertImplementationsToJson(implementations));
         }
