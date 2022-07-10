@@ -56,10 +56,15 @@ public final class InjectorNodeFinderImpl implements InjectorNodeFinder
         loadedNodes.add(rootNode);
         nodesByModId.put(ROOT_MOD_ID, rootNode);
         populateLoadedNodes();
+        childMods.clear();
         populateAllParentNodes();
+        parentMods.clear();
         populateAllChildNodes();
         populateDependencyTree(rootNode, new HashSet<>(), getAllChildren(rootNode));
+        parentNodes.clear();
+        childNodes.clear();
         calculateImmediateParents();
+        dependencyTree.clear();
     }
 
     private void populateLoadedNodes() {
