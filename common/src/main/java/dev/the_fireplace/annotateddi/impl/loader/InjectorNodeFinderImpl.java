@@ -3,9 +3,9 @@ package dev.the_fireplace.annotateddi.impl.loader;
 import com.google.common.collect.Sets;
 import com.google.inject.Singleton;
 import dev.the_fireplace.annotateddi.api.di.Implementation;
+import dev.the_fireplace.annotateddi.impl.datastructure.LargePowerSet;
 import dev.the_fireplace.annotateddi.impl.domain.loader.InjectorNodeFinder;
 import dev.the_fireplace.annotateddi.impl.domain.loader.LoaderHelper;
-import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -122,18 +122,34 @@ public final class InjectorNodeFinderImpl implements InjectorNodeFinder
     private Collection<Node> getNodesStartingCombinedBranches(Set<Node> parentDependencies, Set<Node> remainingChildren) {
         Collection<Node> nodes = new HashSet<>();
         Set<Node> candidateCombinedBranchStarts = getCandidateCombinedBranchStarts(parentDependencies, remainingChildren);
-        Map<Integer, Set<Set<Node>>> candidateGroupings = getCombinedBranchCandidateGroupings(candidateCombinedBranchStarts);
-        Collection<Node> confirmedCandidates = new HashSet<>();
         for (int groupSize = 2; groupSize <= candidateCombinedBranchStarts.size(); groupSize++) {
-            for (Set<Node> candidateGroup : candidateGroupings.get(groupSize)) {
-                if (candidateGroup.stream().anyMatch(confirmedCandidates::contains)) {
-                    continue;
+            LargePowerSet<Node> powerSet = new LargePowerSet<>(candidateCombinedBranchStarts, groupSize, groupSize);
+            boolean finishedScan = false;
+            do {
+                boolean rebuildPowerSet = false;
+                for (LargePowerSet.LargeIterator<Node> iterator = powerSet.iterator(); iterator.hasNext(); ) {
+                    Set<Node> candidateGroup = iterator.next();
+                    boolean startsCombinedBranch = nodeStartsCombinedBranch(parentDependencies, candidateGroup);
+                    if (startsCombinedBranch) {
+                        nodes.add(candidateGroup.stream().findAny().orElseThrow());
+                        candidateCombinedBranchStarts.removeAll(candidateGroup);
+
+                        if (candidateCombinedBranchStarts.size() < groupSize) {
+                            break;
+                        }
+
+                        if (iterator.shouldBeRebuiltForPerformance(candidateCombinedBranchStarts.size())) {
+                            rebuildPowerSet = true;
+                            break;
+                        }
+                    }
                 }
-                boolean startsCombinedBranch = nodeStartsCombinedBranch(parentDependencies, candidateGroup);
-                if (startsCombinedBranch) {
-                    confirmedCandidates.addAll(candidateGroup);
+                if (rebuildPowerSet) {
+                    powerSet = new LargePowerSet<>(candidateCombinedBranchStarts, groupSize, groupSize);
+                } else {
+                    finishedScan = true;
                 }
-            }
+            } while (!finishedScan);
         }
 
         return nodes;
@@ -163,22 +179,6 @@ public final class InjectorNodeFinderImpl implements InjectorNodeFinder
 
     private Set<Node> getAllDependencies(Node node) {
         return new HashSet<>(parentNodes.getOrDefault(node, Collections.emptySet()));
-    }
-
-    private Map<Integer, Set<Set<Node>>> getCombinedBranchCandidateGroupings(Set<Node> candidateCombinedBranchStarts) {
-        if (candidateCombinedBranchStarts.size() < 2) {
-            return Collections.emptyMap();
-        }
-        Set<Set<Node>> powerSet = Sets.powerSet(candidateCombinedBranchStarts);
-        Map<Integer, Set<Set<Node>>> subsetsBySize = new Int2ObjectArrayMap<>(candidateCombinedBranchStarts.size() - 1);
-        for (Set<Node> subset : powerSet) {
-            if (subset.size() <= 1) {
-                continue;
-            }
-            subsetsBySize.computeIfAbsent(subset.size(), u -> new HashSet<>()).add(subset);
-        }
-
-        return subsetsBySize;
     }
 
     private boolean nodeStartsSelfContainedBranch(Set<Node> parentDependencies, Node evaluatingNode) {
