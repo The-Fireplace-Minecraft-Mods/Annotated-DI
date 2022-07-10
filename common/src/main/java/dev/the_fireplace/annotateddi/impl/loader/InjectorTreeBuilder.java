@@ -44,7 +44,7 @@ public final class InjectorTreeBuilder
     private void buildTree() {
         populateAllParentMods();
         populateAllChildMods();
-        InjectorNode rootNode = new InjectorNode(Set.of(ROOT_MOD_ID));
+        InjectorNode rootNode = new InjectorNode(Sets.newHashSet(ROOT_MOD_ID));
         if (this.loaderHelper.isModLoaded("java")) {
             rootNode = rootNode.with("java");
             nodesByModId.put("java", rootNode);
@@ -139,7 +139,7 @@ public final class InjectorTreeBuilder
                     }
                     boolean startsCombinedBranch = nodeStartsCombinedBranch(parentDependencies, candidateGroup);
                     if (startsCombinedBranch) {
-                        nodes.add(candidateGroup.stream().findAny().orElseThrow());
+                        nodes.add(candidateGroup.stream().findAny().get());
                         candidateCombinedBranchStarts.removeAll(candidateGroup);
                         confirmedCandidates.addAll(candidateGroup);
 
@@ -170,7 +170,7 @@ public final class InjectorTreeBuilder
         InjectorNode firstCandidate = remainingCandidatesInGroup[0];
         remainingCandidatesInGroup = Arrays.copyOfRange(remainingCandidatesInGroup, 1, remainingCandidatesInGroup.length);
 
-        Collection<InjectorNode> evaluatingGroupAllChildren = new HashSet<>(Set.of(remainingCandidatesInGroup));
+        Collection<InjectorNode> evaluatingGroupAllChildren = new HashSet<>(Sets.newHashSet(remainingCandidatesInGroup));
         for (InjectorNode candidate : candidateGroup) {
             evaluatingGroupAllChildren.addAll(getAllChildren(candidate));
         }
