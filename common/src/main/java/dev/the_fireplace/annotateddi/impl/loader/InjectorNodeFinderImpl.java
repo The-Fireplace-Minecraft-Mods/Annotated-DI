@@ -10,6 +10,7 @@ import dev.the_fireplace.annotateddi.impl.domain.loader.LoaderHelper;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Singleton
 @Implementation
@@ -30,7 +31,9 @@ public final class InjectorNodeFinderImpl implements InjectorNodeFinder
     @Inject
     public InjectorNodeFinderImpl(LoaderHelper loaderHelper) {
         this.loaderHelper = loaderHelper;
-        loadedMods = new HashSet<>(loaderHelper.getLoadedMods());
+        loadedMods = loaderHelper.getLoadedMods().stream()
+            .filter(modId -> loaderHelper.findDiConfigPath(modId).isPresent())
+            .collect(Collectors.toSet());
         childMods = new HashMap<>(5);
         parentMods = new HashMap<>(5);
         loadedNodes = new HashSet<>(5);
