@@ -126,13 +126,18 @@ public final class InjectorNodeFinderImpl implements InjectorNodeFinder
             LargePowerSet<Node> powerSet = new LargePowerSet<>(candidateCombinedBranchStarts, groupSize, groupSize);
             boolean finishedScan = false;
             do {
+                Collection<Node> confirmedCandidates = new HashSet<>();
                 boolean rebuildPowerSet = false;
                 for (LargePowerSet.LargeIterator<Node> iterator = powerSet.iterator(); iterator.hasNext(); ) {
                     Set<Node> candidateGroup = iterator.next();
+                    if (candidateGroup.stream().anyMatch(confirmedCandidates::contains)) {
+                        continue;
+                    }
                     boolean startsCombinedBranch = nodeStartsCombinedBranch(parentDependencies, candidateGroup);
                     if (startsCombinedBranch) {
                         nodes.add(candidateGroup.stream().findAny().orElseThrow());
                         candidateCombinedBranchStarts.removeAll(candidateGroup);
+                        confirmedCandidates.addAll(candidateGroup);
 
                         if (candidateCombinedBranchStarts.size() < groupSize) {
                             break;
@@ -145,6 +150,7 @@ public final class InjectorNodeFinderImpl implements InjectorNodeFinder
                     }
                 }
                 if (rebuildPowerSet) {
+                    confirmedCandidates.clear();
                     powerSet = new LargePowerSet<>(candidateCombinedBranchStarts, groupSize, groupSize);
                 } else {
                     finishedScan = true;
