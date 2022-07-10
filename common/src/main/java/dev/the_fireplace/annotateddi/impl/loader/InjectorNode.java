@@ -17,7 +17,7 @@ class InjectorNode
     }
 
     public InjectorNode with(String modId) {
-        return withAll(Set.of(modId));
+        return withAll(Sets.newHashSet(modId));
     }
 
     public InjectorNode withAll(Set<String> modIds) {
@@ -29,8 +29,8 @@ class InjectorNode
         if (obj == this) {
             return true;
         }
-        if (obj instanceof InjectorNode otherNode) {
-            return this.modIds.equals(otherNode.modIds);
+        if (obj instanceof InjectorNode) {
+            return this.modIds.equals(((InjectorNode) obj).modIds);
         }
         return false;
     }

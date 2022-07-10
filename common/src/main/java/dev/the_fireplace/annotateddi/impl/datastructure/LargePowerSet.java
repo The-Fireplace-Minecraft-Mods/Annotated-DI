@@ -4,13 +4,9 @@ import com.google.common.collect.ImmutableList;
 
 import java.math.BigInteger;
 import java.util.*;
-import java.util.regex.MatchResult;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class LargePowerSet<T> implements Iterable<Set<T>>
 {
-    private static final Pattern BIT_PATTERN = Pattern.compile("1");
     private final Collection<T> inputEntries;
     private final int minimumSubsetSize;
     private final int maximumSubsetSize;
@@ -92,7 +88,12 @@ public class LargePowerSet<T> implements Iterable<Set<T>>
         private void findNextIndices() {
             currentCombination = currentCombination.add(BigInteger.ONE);
             String combinationBinaryValue = currentCombination.toString(2);
-            indicesWithEnabledBit = BIT_PATTERN.matcher(combinationBinaryValue).results().map(MatchResult::start).collect(Collectors.toSet());
+            indicesWithEnabledBit = new HashSet<>();
+            int index = combinationBinaryValue.indexOf('1');
+            while (index != -1) {
+                indicesWithEnabledBit.add(index);
+                index = combinationBinaryValue.indexOf('1', index + 1);
+            }
             if (indicesWithEnabledBit.size() < minimumSubsetSize || indicesWithEnabledBit.size() > maximumSubsetSize) {
                 findNextIndices();
             }
