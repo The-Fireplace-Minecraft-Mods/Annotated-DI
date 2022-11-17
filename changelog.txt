@@ -1,3 +1,0 @@
-Fix crash with large numbers of mods with tangled dependency trees
-Startup performance improvements
-Mods with only custom modules are now required to run the Annotation Processor or otherwise include an Annotated DI config file, for performance reasons.
