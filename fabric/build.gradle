@@ -77,9 +77,9 @@ tasks.withType(JavaCompile).configureEach {
     source(project(':common').sourceSets.main.allSource)
 }
 
-if (hasProperty('curseForgeApiKey')) {
+if (hasProperty('curseForgeApiKey') || System.getenv("CURSEFORGE_API_KEY") != null) {
     curseforge {
-        apiKey = curseForgeApiKey
+        apiKey = findProperty('curseForgeApiKey') ?: System.getenv("CURSEFORGE_API_KEY")
         project {
             id = '501373'
             changelog = changelogFile
@@ -101,9 +101,9 @@ if (hasProperty('curseForgeApiKey')) {
     }
 }
 
-if (hasProperty('modrinthApiKey')) {
+if (hasProperty('modrinthApiKey') || System.getenv("MODRINTH_API_KEY") != null) {
     modrinth {
-        token = modrinthApiKey
+        token = findProperty('modrinthApiKey') ?: System.getenv("MODRINTH_API_KEY")
         projectId = 'RAXqYPH1'
         versionNumber = "$version+fabric"
         versionName = project.mod_version
