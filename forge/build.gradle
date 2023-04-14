@@ -59,11 +59,6 @@ tasks.jarJar {
     archiveClassifier = ''
 }
 
-//jarJar {
-//    archiveClassifier('')
-//    configurations = [project.configurations.shade]
-//}
-
 minecraft {
     mappings channel: 'official', version: minecraft_version
 
