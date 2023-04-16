@@ -3,7 +3,7 @@ plugins {
     id 'fabric-loom' version '1.0-SNAPSHOT'
     // Mod Hosting Publish
     id 'com.matthewprenger.cursegradle' version '1.4.0'
-    id 'com.modrinth.minotaur' version '2.2.0'
+    id 'com.modrinth.minotaur' version '2.7.5'
 }
 
 archivesBaseName = "${archives_base_name}-Fabric"
@@ -108,14 +108,10 @@ if (hasProperty('modrinthApiKey')) {
         uploadFile = mainArtifactFile
         changelog = changelogFile.getText()
         versionType = project.release_type
-        gameVersions = [
-                project.minecraft_version as String,
-                '1.17',
-        ]
-        loaders = [
-                'fabric',
-                'quilt',
-        ]
+        gameVersions.add(project.minecraft_version as String)
+        gameVersions.add('1.17')
+        loaders.add('fabric')
+        loaders.add('quilt')
     }
 }
 

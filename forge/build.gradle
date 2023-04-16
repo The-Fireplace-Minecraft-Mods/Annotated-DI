@@ -13,7 +13,7 @@ plugins {
     id 'java-library'
     // Mod Hosting Publish
     id 'com.matthewprenger.cursegradle' version '1.4.0'
-    id 'com.modrinth.minotaur' version '2.2.0'
+    id 'com.modrinth.minotaur' version '2.7.5'
 }
 apply plugin: 'net.minecraftforge.gradle'
 
@@ -154,18 +154,14 @@ if (hasProperty('modrinthApiKey')) {
     modrinth {
         token = modrinthApiKey
         projectId = 'RAXqYPH1'
-        versionNumber = version
+        versionNumber.set(version)
         versionName = project.mod_version
         uploadFile = mainArtifactFile
         changelog = changelogFile.getText()
         versionType = project.release_type
-        gameVersions = [
-                project.minecraft_version as String,
-                '1.17',
-        ]
-        loaders = [
-                'forge',
-        ]
+        loaders.add('forge')
+        gameVersions.add(project.minecraft_version as String)
+        gameVersions.add('1.17')
     }
 }
 
