@@ -1,3 +1,2 @@
 ./gradlew build
-./gradlew curseforge publishModrinth publish
-./gradlew closeAndReleaseRepository
+./gradlew curseforge publishModrinth
