@@ -30,7 +30,7 @@ public abstract class ImplementationProcessor extends AbstractProcessor
 
     @Override
     public Set<String> getSupportedAnnotationTypes() {
-        return Set.of("dev.the_fireplace.annotateddi.api.di.Implementation");
+        return Set.of(Implementation.class.getCanonicalName());
     }
 
     @Override
