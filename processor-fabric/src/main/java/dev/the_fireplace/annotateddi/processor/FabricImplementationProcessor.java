@@ -4,13 +4,8 @@ import com.google.auto.service.AutoService;
 import net.fabricmc.api.Environment;
 
 import javax.annotation.processing.Processor;
-import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.annotation.processing.SupportedSourceVersion;
-import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 
-@SupportedAnnotationTypes("dev.the_fireplace.annotateddi.api.di.Implementation")
-@SupportedSourceVersion(SourceVersion.RELEASE_17)
 @AutoService(Processor.class)
 public final class FabricImplementationProcessor extends ImplementationProcessor
 {
