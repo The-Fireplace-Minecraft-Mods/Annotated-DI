@@ -10,7 +10,7 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 
 @SupportedAnnotationTypes("dev.the_fireplace.annotateddi.api.di.Implementation")
-@SupportedSourceVersion(SourceVersion.RELEASE_16)
+@SupportedSourceVersion(SourceVersion.RELEASE_17)
 @AutoService(Processor.class)
 public final class FabricImplementationProcessor extends ImplementationProcessor
 {
