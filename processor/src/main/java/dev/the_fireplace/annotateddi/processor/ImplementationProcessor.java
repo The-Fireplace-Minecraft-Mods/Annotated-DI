@@ -40,6 +40,7 @@ public abstract class ImplementationProcessor extends AbstractProcessor
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+        processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "Annotated DI processing starting.");
         for (TypeElement annotation : annotations) {
             Set<? extends Element> annotatedElements = roundEnv.getElementsAnnotatedWith(annotation);
             List<Element> implementations = getValidAnnotatedElements(annotatedElements);
