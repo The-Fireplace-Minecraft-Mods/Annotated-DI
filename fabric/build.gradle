@@ -84,6 +84,10 @@ if (hasProperty('curseForgeApiKey')) {
             changelog = changelogFile
             releaseType = project.release_type
             addGameVersion project.minecraft_version
+            addGameVersion '1.19.3'
+            addGameVersion '1.19.2'
+            addGameVersion '1.19.1'
+            addGameVersion '1.19'
             addGameVersion 'Java 17'
             addGameVersion 'Fabric'
             mainArtifact(mainArtifactFile) {
@@ -107,6 +111,10 @@ if (hasProperty('modrinthApiKey')) {
         changelog = changelogFile.getText()
         versionType = project.release_type
         gameVersions.add(project.minecraft_version as String)
+        gameVersions.add('1.19.3')
+        gameVersions.add('1.19.2')
+        gameVersions.add('1.19.1')
+        gameVersions.add('1.19')
         loaders.add('fabric')
         loaders.add('quilt')
     }
