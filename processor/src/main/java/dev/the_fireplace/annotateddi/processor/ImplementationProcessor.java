@@ -9,6 +9,7 @@ import dev.the_fireplace.annotateddi.api.di.Implementation;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
+import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
@@ -26,6 +27,16 @@ public abstract class ImplementationProcessor extends AbstractProcessor
     public static final String DI_CONFIG_FILE_NAME = "annotated-di.json";
     private static final String VERSION = "${version}";
     private final Gson gson = new Gson();
+
+    @Override
+    public Set<String> getSupportedAnnotationTypes() {
+        return Set.of("dev.the_fireplace.annotateddi.api.di.Implementation");
+    }
+
+    @Override
+    public SourceVersion getSupportedSourceVersion() {
+        return SourceVersion.RELEASE_8;
+    }
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
