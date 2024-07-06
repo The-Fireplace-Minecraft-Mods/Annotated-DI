@@ -1,2 +1,4 @@
 Update to Guice 6.0.0
 - Developers: Time to start migrating to jakarta.inject instead of javax.inject. javax.inject support will be completely dropped with Annotated DI 5.0.0 when we upgrade to Guice 7.0.0.
+
+[1.19.X] Target Java 17 when annotation processing
