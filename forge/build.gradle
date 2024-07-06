@@ -48,6 +48,7 @@ dependencies {
         exclude(group: 'com.google.guava')
     }
     jarJar 'javax.inject:javax.inject:[1]'
+    jarJar 'jakarta.inject:jakarta.inject-api:[2.0.1]'
     jarJar 'aopalliance:aopalliance:[1.0]'
 
     compileOnly project(":common")
