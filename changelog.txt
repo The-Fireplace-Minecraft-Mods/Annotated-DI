@@ -3,4 +3,6 @@ Update to Guice 6.0.0
 
 Minor annotation processor optimizations
 
+Optimized injection speed
+
 Used Jar In Jar to fix crash with Valkyrien Skies 2. (Waterpicker)
