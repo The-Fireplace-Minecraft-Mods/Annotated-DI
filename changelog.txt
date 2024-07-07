@@ -3,4 +3,6 @@ Update to Guice 6.0.0
 
 Minor annotation processor optimizations
 
+Optimized injection speed
+
 [1.19.X] Target Java 17 when annotation processing
