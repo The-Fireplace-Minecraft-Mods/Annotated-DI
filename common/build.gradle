@@ -19,6 +19,7 @@ dependencies {
         exclude(group: 'com.google.guava')
     }
     api 'javax.inject:javax.inject:1'
+    api 'jakarta.inject:jakarta.inject-api:2.0.1'
     api 'aopalliance:aopalliance:1.0'
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:${project.junit_version}"
