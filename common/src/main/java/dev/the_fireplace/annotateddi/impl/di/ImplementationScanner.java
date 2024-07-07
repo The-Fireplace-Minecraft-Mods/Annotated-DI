@@ -33,7 +33,7 @@ public final class ImplementationScanner
             if (jsonElement instanceof JsonObject) {
                 JsonObject jsonObject = (JsonObject) jsonElement;
                 implementationContainer = readImplementationContainerJson(jsonObject);
-                AnnotatedDIConstants.getLogger().debug("Found valid DI config at " + path);
+                AnnotatedDIConstants.getLogger().debug("Found valid DI config at {}", path);
             }
         } catch (IOException | JsonParseException | ClassNotFoundException e) {
             AnnotatedDIConstants.getLogger().error("Exception when reading implementation file!", e);
