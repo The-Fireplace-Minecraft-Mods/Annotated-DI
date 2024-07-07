@@ -3,6 +3,7 @@ package dev.the_fireplace.annotateddi.impl.injector;
 import com.google.gson.*;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Stage;
 import dev.the_fireplace.annotateddi.impl.AnnotatedDIConstants;
 import dev.the_fireplace.annotateddi.impl.di.AnnotatedDIConfigModule;
 import dev.the_fireplace.annotateddi.impl.di.ImplementationContainer;
@@ -27,8 +28,18 @@ import static dev.the_fireplace.annotateddi.impl.di.ImplementationScanner.DI_CON
 @SuppressWarnings({"rawtypes", "unchecked"})
 public final class AnnotatedDIInjectorLoader
 {
+    private static boolean isDevelopmentEnvironment = false;
+
     public static Injector loadAnnotatedDIInjector() {
-        return Guice.createInjector(new AnnotatedDIConfigModule(new AnnotatedDIInjectorLoader().findImplementation()));
+        return Guice.createInjector(getStage(), new AnnotatedDIConfigModule(new AnnotatedDIInjectorLoader().findImplementation()));
+    }
+
+    private static Stage getStage() {
+        return isDevelopmentEnvironment ? Stage.DEVELOPMENT : Stage.PRODUCTION;
+    }
+
+    public static void setDevelopmentEnvironment(boolean developmentEnvironment) {
+        isDevelopmentEnvironment = developmentEnvironment;
     }
 
     private ImplementationContainer findImplementation() {
