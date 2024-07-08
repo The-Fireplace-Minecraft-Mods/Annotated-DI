@@ -5,4 +5,4 @@ Minor annotation processor optimizations
 
 Optimized injection speed
 
-Used Jar In Jar to fix crash with Valkyrien Skies 2. (Waterpicker)
+[1.20.6] Target Java 21 when annotation processing
