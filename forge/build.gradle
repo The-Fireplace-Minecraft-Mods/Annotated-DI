@@ -16,8 +16,9 @@ plugins {
 apply plugin: 'net.minecraftforge.gradle'
 
 archivesBaseName = "${archives_base_name}-Forge"
-def mainArtifactFile = new File(new File(buildDir, 'libs'), "$archivesBaseName-${version}.jar")
+def mainArtifactFile = layout.buildDirectory.file("libs/${archivesBaseName}-${version}.jar").get().asFile
 def changelogFile = file('../changelog.txt')
+def supportedMinecraftVersions = [project.minecraft_version]
 jarJar.enable()
 
 dependencies {
@@ -119,7 +120,9 @@ if (hasProperty('curseForgeApiKey')) {
             id = '605980'
             changelog = changelogFile
             releaseType = project.release_type
-            addGameVersion project.minecraft_version
+            supportedMinecraftVersions.each { value ->
+                addGameVersion value
+            }
             addGameVersion 'Java 8'
             addGameVersion 'Forge'
             mainArtifact(mainArtifactFile) {
@@ -144,8 +147,8 @@ if (hasProperty('modrinthApiKey')) {
         uploadFile = mainArtifactFile
         changelog = changelogFile.getText()
         versionType = project.release_type
+        gameVersions = supportedMinecraftVersions
         loaders.add('forge')
-        gameVersions.add(project.minecraft_version as String)
     }
 }
 
