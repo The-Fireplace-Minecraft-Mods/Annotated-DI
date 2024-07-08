@@ -6,7 +6,8 @@ jobs:
     strategy:
       matrix:
         java: [
-          17
+            17,
+            16,
         ]
         os: [ windows-2022 ]
     runs-on: ${{ matrix.os }}
