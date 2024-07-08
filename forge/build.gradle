@@ -24,8 +24,7 @@ dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
     implementation 'com.google.code.findbugs:jsr305:3.0.2'
-    minecraftLibrary("com.google.inject:guice:${project.guice_version}") {
-        transitive = true
+    api("com.google.inject:guice:${project.guice_version}") {
         exclude(group: 'com.google.guava')
     }
 
