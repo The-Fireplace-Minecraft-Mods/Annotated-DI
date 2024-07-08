@@ -25,6 +25,7 @@ dependencies {
 
     implementation 'com.google.code.findbugs:jsr305:3.0.2'
     minecraftLibrary("com.google.inject:guice:${project.guice_version}") {
+        transitive = true
         exclude(group: 'com.google.guava')
     }
 
