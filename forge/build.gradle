@@ -16,8 +16,9 @@ plugins {
 apply plugin: 'net.minecraftforge.gradle'
 
 archivesBaseName = "${archives_base_name}-Forge"
-def mainArtifactFile = new File(new File(buildDir, 'libs'), "$archivesBaseName-${version}.jar")
+def mainArtifactFile = layout.buildDirectory.file("libs/${archivesBaseName}-${version}.jar").get().asFile
 def changelogFile = file('../changelog.txt')
+def supportedMinecraftVersions = [project.minecraft_version, '1.19.3', '1.19.2', '1.19.1', '1.19']
 jarJar.enable()
 
 dependencies {
@@ -119,11 +120,9 @@ if (hasProperty('curseForgeApiKey')) {
             id = '605980'
             changelog = changelogFile
             releaseType = project.release_type
-            addGameVersion project.minecraft_version
-            addGameVersion '1.19.3'
-            addGameVersion '1.19.2'
-            addGameVersion '1.19.1'
-            addGameVersion '1.19'
+            supportedMinecraftVersions.each { value ->
+                addGameVersion value
+            }
             addGameVersion 'Java 17'
             addGameVersion 'Forge'
             mainArtifact(mainArtifactFile) {
@@ -137,8 +136,6 @@ if (hasProperty('curseForgeApiKey')) {
     }
 }
 
-import com.modrinth.minotaur.TaskModrinthUpload
-
 if (hasProperty('modrinthApiKey')) {
     modrinth {
         token = modrinthApiKey
@@ -148,11 +145,7 @@ if (hasProperty('modrinthApiKey')) {
         uploadFile = mainArtifactFile
         changelog = changelogFile.getText()
         versionType = project.release_type
-        gameVersions.add(project.minecraft_version as String)
-        gameVersions.add('1.19.3')
-        gameVersions.add('1.19.2')
-        gameVersions.add('1.19.1')
-        gameVersions.add('1.19')
+        gameVersions = supportedMinecraftVersions
         loaders.add('forge')
     }
 }
