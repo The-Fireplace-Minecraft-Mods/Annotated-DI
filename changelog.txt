@@ -5,4 +5,4 @@ Minor annotation processor optimizations
 
 Optimized injection speed
 
-[1.19.X] Target Java 17 when annotation processing
+[1.18.X/1.19.X] Target Java 17 when annotation processing
