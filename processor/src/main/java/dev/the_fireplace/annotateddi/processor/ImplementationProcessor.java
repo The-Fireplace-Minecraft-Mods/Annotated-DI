@@ -35,7 +35,7 @@ public abstract class ImplementationProcessor extends AbstractProcessor
 
     @Override
     public SourceVersion getSupportedSourceVersion() {
-        return SourceVersion.RELEASE_16;
+        return SourceVersion.RELEASE_21;
     }
 
     @Override
