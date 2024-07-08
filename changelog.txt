@@ -5,4 +5,4 @@ Minor annotation processor optimizations
 
 Optimized injection speed
 
-Used Jar In Jar to fix crash with Valkyrien Skies 2. (Waterpicker)
+[Forge] Used Jar In Jar to fix crash with Valkyrien Skies 2. (Waterpicker)
