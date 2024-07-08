@@ -100,10 +100,8 @@ if (hasProperty('curseForgeApiKey')) {
     }
 }
 
-import com.modrinth.minotaur.TaskModrinthUpload
-
 if (hasProperty('modrinthApiKey')) {
-    task publishModrinth(type: TaskModrinthUpload) {
+    modrinth {
         token = modrinthApiKey
         projectId = 'RAXqYPH1'
         versionNumber = "$version+fabric"
