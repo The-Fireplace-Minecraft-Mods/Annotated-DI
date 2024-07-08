@@ -7,8 +7,9 @@ plugins {
 }
 
 archivesBaseName = "${archives_base_name}-Fabric"
-def mainArtifactFile = new File(new File(buildDir, 'libs'), "$archivesBaseName-${version}.jar")
+def mainArtifactFile = layout.buildDirectory.file("libs/${archivesBaseName}-${version}.jar").get().asFile
 def changelogFile = file('../changelog.txt')
+def supportedMinecraftVersions = [project.minecraft_version]
 
 dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
@@ -83,7 +84,9 @@ if (hasProperty('curseForgeApiKey')) {
             id = '501373'
             changelog = changelogFile
             releaseType = project.release_type
-            addGameVersion project.minecraft_version
+            supportedMinecraftVersions.each { value ->
+                addGameVersion value
+            }
             addGameVersion 'Java 21'
             addGameVersion 'Fabric'
             mainArtifact(mainArtifactFile) {
@@ -106,7 +109,7 @@ if (hasProperty('modrinthApiKey')) {
         uploadFile = mainArtifactFile
         changelog = changelogFile.getText()
         versionType = project.release_type
-        gameVersions.add(project.minecraft_version as String)
+        gameVersions = supportedMinecraftVersions
         loaders.add('fabric')
         loaders.add('quilt')
     }
