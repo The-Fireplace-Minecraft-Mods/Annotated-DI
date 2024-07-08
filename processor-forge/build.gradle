@@ -19,7 +19,7 @@ tasks.register('processMainSource', Sync) {
     from sourceSets.main.java
     from project(':processor').sourceSets.main.java
     expand 'version': project.version
-    into "$buildDir/src"
+    into layout.buildDirectory.dir("src")
 }
 
 tasks.register('sourcesJar', Jar) {
