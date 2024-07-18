@@ -18,7 +18,7 @@ apply plugin: 'net.minecraftforge.gradle'
 archivesBaseName = "${archives_base_name}-Forge"
 def mainArtifactFile = layout.buildDirectory.file("libs/${archivesBaseName}-${version}.jar").get().asFile
 def changelogFile = file('../changelog.txt')
-def supportedMinecraftVersions = [project.minecraft_version]
+def supportedMinecraftVersions = [project.minecraft_version, '1.20.3', '1.20.2', '1.20.1', '1.20']
 jarJar.enable()
 
 dependencies {
