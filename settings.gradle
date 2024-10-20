@@ -17,4 +17,4 @@ pluginManagement {
 }
 
 rootProject.name = 'AnnotatedDI'
-include('common', 'processor', 'fabric', 'forge', 'processor-fabric', 'processor-forge')
+include('common', 'processor', 'fabric', 'processor-fabric')
