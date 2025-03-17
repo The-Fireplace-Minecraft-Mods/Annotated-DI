@@ -1,9 +1,6 @@
 package dev.the_fireplace.annotateddi.impl.io;
 
-import java.net.JarURLConnection;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLConnection;
+import java.net.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -21,7 +18,16 @@ public final class UrlUtil
                 String path = resourceURL.getPath();
 
                 if (path.endsWith(filename)) {
-                    codeSourceURL = new URL(resourceURL.getProtocol(), resourceURL.getHost(), resourceURL.getPort(), path.substring(0, path.length() - filename.length()));
+                    URI uri = new URI(
+                        resourceURL.getProtocol(),
+                        null,
+                        resourceURL.getHost(),
+                        resourceURL.getPort(),
+                        path.substring(0, path.length() - filename.length()),
+                        null,
+                        null
+                    );
+                    codeSourceURL = uri.toURL();
                 } else {
                     throw new Exception("Could not figure out code source for file '" + filename + "' and URL '" + resourceURL + "'!");
                 }
