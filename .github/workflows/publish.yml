@@ -61,6 +61,7 @@ jobs:
                         build/jreleaser/output.properties
 
             -   name: hosting publish
+                if: success() || failure()
                 run: ./gradlew build curseforge modrinth
                 env:
                     CURSEFORGE_API_KEY: ${{ secrets.CF_API_KEY }}
