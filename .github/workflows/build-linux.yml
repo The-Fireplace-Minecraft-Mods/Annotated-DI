@@ -55,3 +55,12 @@ jobs:
             JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             JRELEASER_NEXUS2_USERNAME: ${{ secrets.MAVENCENTRAL_USERNAME }}
             JRELEASER_NEXUS2_PASSWORD: ${{ secrets.MAVENCENTRAL_PASSWORD }}
+
+      -   name: capture JReleaser output
+          if: failure()
+          uses: actions/upload-artifact@v4
+          with:
+              name: JReleaser
+              path: |
+                  build/jreleaser/trace.log
+                  build/jreleaser/output.properties
