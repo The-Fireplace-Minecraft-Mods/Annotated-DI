@@ -9,6 +9,6 @@ Annotated DI adds Dependency Injection for Minecraft mods. It includes [Guice](h
 ## Setup and usage
 See [Getting Started](https://github.com/The-Fireplace-Minecraft-Mods/Annotated-DI/wiki/Getting-Started) on the wiki.
 
-### Supported Game Versions
+## Supported Game Versions
 - Fabric: Minecraft 1.14 - 1.21.5
 - Forge: Minecraft 1.15.2 - 1.20.6
