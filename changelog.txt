@@ -1,1 +1,1 @@
-[1.20+] Update UrlUtil to no longer use deprecated URL constructor
+Added French translation
