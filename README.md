@@ -12,5 +12,5 @@ See [Getting Started](https://github.com/The-Fireplace-Minecraft-Mods/Annotated-
 
 ## Current Target Game Versions
 New releases are not planned to occur outside of these version ranges. Existing versions outside these ranges may still function, but are no longer supported.
-- Fabric: Minecraft 1.14 - Current
+- Fabric: Minecraft 1.14.4 - Current
 - Forge: Minecraft 1.15.2 - 1.20.6
