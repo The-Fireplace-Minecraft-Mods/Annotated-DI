@@ -26,4 +26,4 @@ jobs:
               ${{ matrix.java }}
 
       - name: build
-        run: ./gradlew build
+        run: ./gradlew build test
