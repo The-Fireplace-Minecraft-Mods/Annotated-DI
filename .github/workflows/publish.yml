@@ -36,13 +36,19 @@ jobs:
                 run: chmod +x ./gradlew
 
             -   name: publish to aggregate build directory
-                run: ./gradlew build publish
+                run: ./gradlew build test publish
 
             -   name: capture build artifacts
                 uses: actions/upload-artifact@v4
                 with:
                     name: Artifacts
                     path: build/libs/
+
+            -   name: hosting publish
+                run: ./gradlew build curseforge modrinth
+                env:
+                    CURSEFORGE_API_KEY: ${{ secrets.CF_API_KEY }}
+                    MODRINTH_API_KEY: ${{ secrets.MR_API_KEY }}
 
             -   name: jreleaser release published artifacts
                 run: ./gradlew jreleaserFullRelease
@@ -61,10 +67,3 @@ jobs:
                     path: |
                         build/jreleaser/trace.log
                         build/jreleaser/output.properties
-
-            -   name: hosting publish
-                if: success() || failure()
-                run: ./gradlew build curseforge modrinth
-                env:
-                    CURSEFORGE_API_KEY: ${{ secrets.CF_API_KEY }}
-                    MODRINTH_API_KEY: ${{ secrets.MR_API_KEY }}
