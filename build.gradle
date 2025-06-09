@@ -65,11 +65,11 @@ subprojects { Project subProject ->
     // Disables Gradle's custom module metadata from being published to maven. The
     // metadata includes mapped dependencies which are not reasonably consumable by
     // other mod developers.
-    tasks.withType(GenerateModuleMetadata) {
+    tasks.withType(GenerateModuleMetadata).configureEach {
         enabled = false
     }
 
-    task copyArtifacts(type: Copy) {
+    tasks.register('copyArtifacts', Copy) {
         from subProject.layout.buildDirectory.dir('staging-deploy')
         into rootProject.layout.buildDirectory.dir('maven/staging-deploy')
     }
