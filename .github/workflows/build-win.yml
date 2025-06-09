@@ -21,6 +21,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: ${{ matrix.java }}
+          distribution: 'temurin'
 
       - name: build
         run: ./gradlew build
