@@ -69,9 +69,15 @@ subprojects { Project subProject ->
         enabled = false
     }
 
+    tasks.register('copyLibs', Copy) {
+        from subProject.layout.buildDirectory.dir('libs')
+        into rootProject.layout.buildDirectory.dir('libs')
+    }
+
     tasks.register('copyArtifacts', Copy) {
         from subProject.layout.buildDirectory.dir('staging-deploy')
         into rootProject.layout.buildDirectory.dir('maven/staging-deploy')
+        finalizedBy(tasks.copyLibs)
     }
 }
 
