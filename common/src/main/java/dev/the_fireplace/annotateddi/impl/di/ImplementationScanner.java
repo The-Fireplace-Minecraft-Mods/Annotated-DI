@@ -83,7 +83,7 @@ public final class ImplementationScanner
             return false;
         }
         JsonArray dependencyModIds = implementationObj.getAsJsonArray("dependencyModIds");
-        if (dependencyModIds.size() == 0) {
+        if (dependencyModIds.isEmpty()) {
             return false;
         }
         for (JsonElement dependencyModId : dependencyModIds) {
