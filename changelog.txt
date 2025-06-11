@@ -1,0 +1,1 @@
+[1.18+] Slight implementation scanner adjustment
