@@ -1,1 +1,1 @@
-Added French translation
+[1.17.1-] Fixed crash when mods attempt to use the DI system.
