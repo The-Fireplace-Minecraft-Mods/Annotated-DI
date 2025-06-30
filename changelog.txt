@@ -1,1 +1,1 @@
-[1.18+] Slight implementation scanner adjustment
+Added Polish translation (Fhilips613)
