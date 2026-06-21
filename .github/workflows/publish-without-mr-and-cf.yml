@@ -1,4 +1,4 @@
-name: build against linux and publish
+name: build against linux and publish skipping mr and cf
 on: [ workflow_dispatch ]
 
 jobs:
