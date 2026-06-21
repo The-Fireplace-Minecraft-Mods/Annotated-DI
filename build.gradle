@@ -55,6 +55,10 @@ subprojects { Project subProject ->
         }
     }
 
+    test {
+        failOnNoDiscoveredTests = false
+    }
+
     repositories {
         mavenCentral()
 
