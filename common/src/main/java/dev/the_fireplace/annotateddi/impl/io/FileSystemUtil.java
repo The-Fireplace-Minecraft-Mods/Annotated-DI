@@ -6,7 +6,6 @@ import java.net.URISyntaxException;
 import java.nio.file.*;
 import java.util.Collections;
 import java.util.Map;
-import java.util.zip.ZipError;
 
 public final class FileSystemUtil
 {
@@ -62,7 +61,7 @@ public final class FileSystemUtil
                 opened = true;
             } catch (FileSystemAlreadyExistsException ignore2) {
                 ret = FileSystems.getFileSystem(jarUri);
-            } catch (IOException | ZipError e) {
+            } catch (IOException e) {
                 throw new IOException("Error accessing " + uri + ": " + e, e);
             }
         }

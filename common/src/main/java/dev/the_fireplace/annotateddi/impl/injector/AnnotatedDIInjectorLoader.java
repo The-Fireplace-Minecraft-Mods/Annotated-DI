@@ -21,7 +21,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.zip.ZipError;
 
 import static dev.the_fireplace.annotateddi.impl.di.ImplementationScanner.DI_CONFIG_FILE_NAME;
 
@@ -95,9 +94,6 @@ public final class AnnotatedDIInjectorLoader
                     }
                 } catch (IOException e) {
                     AnnotatedDIConstants.getLogger().error("Failed to open JAR at " + normalizedPath + "!", e);
-                    continue;
-                } catch (ZipError e) {
-                    AnnotatedDIConstants.getLogger().error("Jar at " + normalizedPath + " is corrupted!", e);
                     continue;
                 }
             }

@@ -1,24 +1,23 @@
 //file:noinspection GroovyAssignabilityCheck
 plugins {
-    id 'fabric-loom' version '1.10-SNAPSHOT'
+    id 'net.fabricmc.fabric-loom' version '1.17-SNAPSHOT'
     // Mod Hosting Publish
     id 'com.matthewprenger.cursegradle' version '1.4.0'
     id 'com.modrinth.minotaur' version '2.+'
 }
 
-archivesBaseName = "${archives_base_name}-Fabric"
-final def mainArtifactFile = layout.buildDirectory.file("libs/${archivesBaseName}-${version}.jar").get().asFile
+base.archivesName = "${archives_base_name}-Fabric"
+final def mainArtifactFile = layout.buildDirectory.file("libs/${base.archivesName}-${version}.jar").get().asFile
 final def changelogFile = file('../changelog.txt')
-final def supportedMinecraftVersions = [project.minecraft_version, '1.21.10', '1.21.9', '1.21.8', '1.21.7', '1.21.6', '1.21.5', '1.21.4', '1.21.3', '1.21.2', '1.21.1', '1.21']
+final def supportedMinecraftVersions = [project.minecraft_version]
 
 dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
-    mappings loom.officialMojangMappings()
 
-    modImplementation "net.fabricmc:fabric-loader:${project.fabric_loader_version}"
+    implementation "net.fabricmc:fabric-loader:${project.fabric_loader_version}"
     implementation 'com.google.code.findbugs:jsr305:3.0.2'
 
-    modApi("com.google.inject:guice:${project.guice_version}") {
+    api("com.google.inject:guice:${project.guice_version}") {
         exclude(group: 'com.google.guava')
     }
     include "com.google.inject:guice:${project.guice_version}"
@@ -34,15 +33,15 @@ loom {
     runs {
         client {
             client()
-            setConfigName("Fabric Client")
-            ideConfigGenerated(true)
-            runDir("run")
+            setDisplayName("Fabric Client")
+            setGenerateRunConfig(true)
+            setRunDirectory("run")
         }
         server {
             server()
-            setConfigName("Fabric Server")
-            ideConfigGenerated(true)
-            runDir("run")
+            setDisplayName("Fabric Server")
+            setGenerateRunConfig(true)
+            setRunDirectory("run")
         }
     }
 }
@@ -87,10 +86,10 @@ if (hasProperty('curseForgeApiKey') || System.getenv("CURSEFORGE_API_KEY") != nu
             supportedMinecraftVersions.each { value ->
                 addGameVersion value
             }
-            addGameVersion 'Java 21'
+            addGameVersion 'Java 25'
             addGameVersion 'Fabric'
             mainArtifact(mainArtifactFile) {
-                displayName = "$archivesBaseName-$version"
+                displayName = "$base.archivesName-$version"
             }
         }
         options {
@@ -118,9 +117,12 @@ if (hasProperty('modrinthApiKey') || System.getenv("MODRINTH_API_KEY") != null) 
 publishing {
     publications {
         mavenJava(MavenPublication) {
+            def pub=it
             from components.java
             groupId project.maven_group
-            artifactId project.archivesBaseName
+            project.afterEvaluate {
+                pub.artifactId = base.archivesName.get()
+            }
             version project.version
             pom {
                 name = project.readable_name
