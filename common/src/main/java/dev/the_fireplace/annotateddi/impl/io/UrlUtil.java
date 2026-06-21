@@ -18,16 +18,9 @@ public final class UrlUtil
                 String path = resourceURL.getPath();
 
                 if (path.endsWith(filename)) {
-                    URI uri = new URI(
-                        resourceURL.getProtocol(),
-                        null,
-                        resourceURL.getHost(),
-                        resourceURL.getPort(),
-                        path.substring(0, path.length() - filename.length()),
-                        null,
-                        null
-                    );
-                    codeSourceURL = uri.toURL();
+                    // Forge doesn't like the new URI constructor on 1.20.1
+                    //noinspection deprecation
+                    codeSourceURL = new URL(resourceURL.getProtocol(), resourceURL.getHost(), resourceURL.getPort(), path.substring(0, path.length() - filename.length()));
                 } else {
                     throw new Exception("Could not figure out code source for file '" + filename + "' and URL '" + resourceURL + "'!");
                 }
