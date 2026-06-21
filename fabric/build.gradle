@@ -9,7 +9,7 @@ plugins {
 base.archivesName = "${archives_base_name}-Fabric"
 final def mainArtifactFile = layout.buildDirectory.file("libs/${base.archivesName}-${version}.jar").get().asFile
 final def changelogFile = file('../changelog.txt')
-final def supportedMinecraftVersions = [project.minecraft_version]
+final def supportedMinecraftVersions = [project.minecraft_version, '26.1.2', '26.1.1', '26.1']
 
 dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
